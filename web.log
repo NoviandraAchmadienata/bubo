@@ -3319,3 +3319,6 @@ Mengambil stream video AI dari: http://127.0.0.1:5002
 127.0.0.1 - - [08/Jul/2026 16:16:12] "GET /api/snapshot?t=1783502172178 HTTP/1.1" 200 -
 127.0.0.1 - - [08/Jul/2026 16:16:35] "GET /api/snapshot?t=1783502195509 HTTP/1.1" 200 -
 127.0.0.1 - - [08/Jul/2026 16:16:35] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jul/2026 16:17:12] "GET /api/snapshot?t=1783502232168 HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jul/2026 16:17:35] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jul/2026 16:17:35] "GET /api/snapshot?t=1783502255509 HTTP/1.1" 200 -

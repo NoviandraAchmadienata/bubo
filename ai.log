@@ -3316,3 +3316,6 @@ Using OpenVINO LATENCY mode for batch=1 inference on (CPU)...
 127.0.0.1 - - [08/Jul/2026 16:16:12] "GET /api/snapshot HTTP/1.1" 200 -
 127.0.0.1 - - [08/Jul/2026 16:16:35] "GET /api/snapshot HTTP/1.1" 200 -
 127.0.0.1 - - [08/Jul/2026 16:16:35] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jul/2026 16:17:12] "GET /api/snapshot HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jul/2026 16:17:35] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jul/2026 16:17:35] "GET /api/snapshot HTTP/1.1" 200 -
