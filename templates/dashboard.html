@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BUBO STRAP Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260630-1">
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="BUBO STRAP">
+          <span class="brand-line">
+            <span>BUB</span>
+            <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
+          </span>
+          <span class="brand-line">STRAP</span>
+        </a>
+
+        <nav class="nav-menu" aria-label="Navigasi utama">
+          <a class="nav-item active" href="/">BERANDA</a>
+          <a class="nav-item collapsible" href="/cctv">
+            <span>CCTV</span>
+            <span class="chevron"></span>
+          </a>
+          <button class="nav-item collapsible" type="button">
+            <span>LOKASI</span>
+            <span class="chevron"></span>
+          </button>
+          <button class="nav-item collapsible outlined" type="button">
+            <span>PEKERJA</span>
+            <span class="chevron"></span>
+          </button>
+        </nav>
+
+        <a class="logout" href="#">LOGOUT</a>
+      </aside>
+
+      <main class="main-content">
+        <h1>BERANDA</h1>
+
+        <section class="panel cctv-panel" aria-labelledby="cctv-title">
+          <h2 id="cctv-title">CCTV</h2>
+          <div class="stream-frame">
+            <img id="stream" alt="CCTV stream deteksi" style="width: 100%; display: block;">
+            <span class="stream-label">CCTV STREAM</span>
+          </div>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel worker-panel" aria-labelledby="worker-title">
+            <h2 id="worker-title">INFORMASI PEKERJA</h2>
+            <div class="worker-layout">
+              <div class="worker-list">
+                <div class="worker-head">
+                  <span>ID PEKERJA</span>
+                  <span>STATUS</span>
+                </div>
+
+                <div class="worker-row">
+                  <div class="worker-id">
+                    <span class="avatar budi"></span>
+                    <strong>BUDI</strong>
+                  </div>
+                  <span class="status healthy"><i></i>OK</span>
+                </div>
+
+                <div class="worker-row">
+                  <div class="worker-id">
+                    <span class="avatar joko"></span>
+                    <strong>JOKO</strong>
+                  </div>
+                  <span class="status warning"><i></i>WARNING</span>
+                </div>
+
+                <div class="worker-row">
+                  <div class="worker-id">
+                    <span class="avatar sari"></span>
+                    <strong>SARI</strong>
+                  </div>
+                  <span class="status healthy"><i></i>OK</span>
+                </div>
+              </div>
+
+              <div class="heart-card">
+                <h3>HEART RATE (JOKO)</h3>
+                <div class="heart-value">
+                  <strong id="heartRate">80</strong>
+                  <span>BPM</span>
+                </div>
+              </div>
+
+              <div class="trend-card">
+                <p>Tren Detak Jantung (Heart Rate)</p>
+                <div class="chart">
+                  <span class="axis axis-120">120</span>
+                  <span class="axis axis-110">110</span>
+                  <span class="axis axis-100">100</span>
+                  <svg viewBox="0 0 360 160" role="img" aria-label="Grafik dummy tren detak jantung">
+                    <polyline points="12,112 64,101 118,95 172,80 226,88 282,64 342,72"></polyline>
+                    <circle cx="12" cy="112" r="4"></circle>
+                    <circle cx="64" cy="101" r="4"></circle>
+                    <circle cx="118" cy="95" r="4"></circle>
+                    <circle cx="172" cy="80" r="4"></circle>
+                    <circle cx="226" cy="88" r="4"></circle>
+                    <circle cx="282" cy="64" r="4"></circle>
+                    <circle cx="342" cy="72" r="4"></circle>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel location-panel" aria-labelledby="location-title">
+            <h2 id="location-title">LOKASI</h2>
+            <div class="map-card">
+              <span class="map-marker marker-one">BUDI</span>
+              <span class="map-marker marker-two">JOKO</span>
+              <span class="map-marker marker-three">SARI</span>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const heartRate = document.getElementById("heartRate");
+      const stream = document.getElementById("stream");
+
+      // ==========================================
+      // 1. MESIN POLLING VIDEO (ANTI-CLOUDFLARE CACHE)
+      // ==========================================
+      let isFetchingFrame = false;
+
+      async function fetchLatestFrame() {
+        if (isFetchingFrame) return;
+        isFetchingFrame = true;
+
+        try {
+          const response = await fetch('/api/snapshot?t=' + new Date().getTime());
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const objectURL = URL.createObjectURL(blob);
+            
+            stream.src = objectURL;
+            
+            // Hapus dari memori browser segera setelah gambar dimuat agar RAM tidak bocor
+            stream.onload = () => {
+              URL.revokeObjectURL(objectURL);
+            };
+          }
+        } catch (error) {
+          stream.alt = "Menunggu stream kamera...";
+        } finally {
+          isFetchingFrame = false;
+        }
+      }
+
+      // Tarik gambar setiap 50ms (~20 FPS)
+      setInterval(fetchLatestFrame, 100);
+
+      // ==========================================
+      // 2. LOGIKA UPDATE DUMMY (BAWAAN)
+      // ==========================================
+      setInterval(() => {
+        const next = 76 + Math.round(Math.random() * 13);
+        heartRate.textContent = next;
+      }, 2500);
+    </script>
+  </body>
+</html>

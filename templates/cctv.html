@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CCTV - BUBO STRAP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260701-1">
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="BUBO STRAP">
+          <span class="brand-line">
+            <span>BUB</span>
+            <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
+          </span>
+          <span class="brand-line">STRAP</span>
+        </a>
+
+        <nav class="nav-menu" aria-label="Navigasi utama">
+          <a class="nav-item" href="/">BERANDA</a>
+          <a class="nav-item active collapsible" href="/cctv">
+            <span>CCTV</span>
+            <span class="chevron"></span>
+          </a>
+          <button class="nav-item collapsible" type="button">
+            <span>LOKASI</span>
+            <span class="chevron"></span>
+          </button>
+          <button class="nav-item collapsible outlined" type="button">
+            <span>PEKERJA</span>
+            <span class="chevron"></span>
+          </button>
+        </nav>
+
+        <a class="logout" href="#">LOGOUT</a>
+      </aside>
+
+      <main class="main-content">
+        <h1>CCTV</h1>
+
+        <section class="cctv-overview">
+          <article class="panel cctv-live-panel" aria-labelledby="cctv-live-title">
+            <div class="panel-heading">
+              <div>
+                <h2 id="cctv-live-title">CCTV AKTIF</h2>
+                <p>CAM-01 Area Produksi</p>
+              </div>
+              <span class="live-badge">LIVE</span>
+            </div>
+
+            <div class="stream-frame cctv-page-stream">
+              <img id="stream" alt="CCTV stream deteksi">
+              <span class="stream-label">CCTV STREAM</span>
+            </div>
+          </article>
+
+          <aside class="panel detection-summary" aria-labelledby="summary-title">
+            <h2 id="summary-title">RINGKASAN DETEKSI</h2>
+
+            <div class="detected-card">
+              <span>Pekerja Terdeteksi</span>
+              <strong id="workerDetected">3</strong>
+              <small>Dummy sementara</small>
+            </div>
+
+            <dl class="camera-meta">
+              <div>
+                <dt>Status Kamera</dt>
+                <dd id="cameraStatus">Memuat</dd>
+              </div>
+              <div>
+                <dt>FPS</dt>
+                <dd id="cameraFps">0.0</dd>
+              </div>
+              <div>
+                <dt>Resolusi</dt>
+                <dd id="cameraResolution">Menunggu</dd>
+              </div>
+              <div>
+                <dt>Update Terakhir</dt>
+                <dd id="lastFrame">Menunggu</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const stream = document.getElementById("stream");
+      const workerDetected = document.getElementById("workerDetected");
+      const cameraStatus = document.getElementById("cameraStatus");
+      const cameraFps = document.getElementById("cameraFps");
+      const cameraResolution = document.getElementById("cameraResolution");
+      const lastFrame = document.getElementById("lastFrame");
+
+      // ==========================================
+      // 1. MESIN POLLING VIDEO (ANTI-CLOUDFLARE CACHE)
+      // ==========================================
+      let isFetchingFrame = false;
+
+      async function fetchLatestFrame() {
+        if (isFetchingFrame) return;
+        isFetchingFrame = true;
+
+        try {
+          // Mengambil 1 frame gambar dengan timestamp acak agar Cloudflare selalu memberikan gambar baru
+          const response = await fetch('/api/snapshot?t=' + new Date().getTime());
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const objectURL = URL.createObjectURL(blob);
+            
+            stream.src = objectURL;
+            
+            // Hapus dari memori browser segera setelah gambar dimuat agar RAM tidak bocor
+            stream.onload = () => {
+              URL.revokeObjectURL(objectURL);
+            };
+          }
+        } catch (error) {
+          stream.alt = "Menunggu stream kamera...";
+        } finally {
+          isFetchingFrame = false;
+        }
+      }
+
+      // Tarik gambar setiap 50ms (~20 FPS)
+      setInterval(fetchLatestFrame, 50);
+
+      // ==========================================
+      // 2. MESIN UPDATE STATUS & STATISTIK
+      // ==========================================
+      function dummyWorkerCount() {
+        const hour = new Date().getSeconds();
+        return 2 + (hour % 3);
+      }
+
+      async function loadStatus() {
+        try {
+          const response = await fetch("/api/status", { cache: "no-store" });
+          const data = await response.json();
+
+          workerDetected.textContent = dummyWorkerCount();
+          cameraStatus.textContent = data.status || "unknown";
+          cameraFps.textContent = data.fps ?? "0.0";
+          cameraResolution.textContent =
+            data.frame_width && data.frame_height
+              ? `${data.frame_width} x ${data.frame_height}`
+              : "Menunggu";
+          lastFrame.textContent =
+            data.seconds_since_frame === null
+              ? "Menunggu"
+              : `${data.seconds_since_frame}s lalu`;
+
+        } catch (error) {
+          cameraStatus.textContent = "offline";
+        }
+      }
+
+      loadStatus();
+      // Update statistik teks setiap 3 detik
+      setInterval(loadStatus, 3000);
+    </script>
+  </body>
+</html>

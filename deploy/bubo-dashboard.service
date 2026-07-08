@@ -1,0 +1,16 @@
+[Unit]
+Description=Bubo Flask Detection Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/home/pctefa/bubo
+ExecStart=/home/pctefa/bubo/run_dashboard.sh
+Restart=on-failure
+RestartSec=5
+Environment=FLASK_HOST=127.0.0.1
+Environment=FLASK_PORT=5000
+Environment=TORCH_NUM_THREADS=2
+
+[Install]
+WantedBy=default.target

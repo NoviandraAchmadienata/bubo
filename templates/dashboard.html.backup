@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BUBO STRAP MVP Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='vendor/tailwindcss-3.4.17.js') }}"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot-screen">
+        <div>
+          <p>BUBO STRAP MVP Dashboard</p>
+          <strong>Loading prototype interface...</strong>
+        </div>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='vendor/react.production.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/react-dom.production.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/prop-types.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/Recharts.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/lucide.js') }}"></script>
+    <script src="{{ url_for('static', filename='dashboard.bundle.js') }}?v=20260629-2"></script>
+    <script src="{{ url_for('static', filename='fallback-dashboard.js') }}?v=20260629-2"></script>
+  </body>
+</html>

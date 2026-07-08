@@ -1,0 +1,31 @@
+description: Ultralytics YOLOv12s model trained on /kaggle/working/PPE-Dataset-for-Workplace-Safety-1/data.yaml
+author: Ultralytics
+date: '2026-07-08T14:24:34.573971'
+version: 8.4.86
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+head: Detect
+batch: 1
+imgsz:
+- 320
+- 320
+names:
+  0: Boots
+  1: Ear-protection
+  2: Glass
+  3: Glove
+  4: Helmet
+  5: Mask
+  6: Person
+  7: Vest
+args:
+  data: null
+  batch: 1
+  fraction: 1.0
+  quantize: 16
+  dynamic: false
+  nms: false
+channels: 3
+end2end: false
