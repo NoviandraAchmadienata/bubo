@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lokasi - BUBO STRAP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-1">
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="BUBO STRAP">
+          <span class="brand-line">
+            <span>BUB</span>
+            <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
+          </span>
+          <span class="brand-line">STRAP</span>
+        </a>
+
+        <nav class="nav-menu" aria-label="Navigasi utama">
+          <a class="nav-item" href="/">BERANDA</a>
+          <a class="nav-item collapsible" href="/cctv">
+            <span>CCTV</span>
+            <span class="chevron"></span>
+          </a>
+          <a class="nav-item active collapsible" href="/lokasi">
+            <span>LOKASI</span>
+            <span class="chevron"></span>
+          </a>
+          <a class="nav-item collapsible outlined" href="/pekerja">
+            <span>PEKERJA</span>
+            <span class="chevron"></span>
+          </a>
+        </nav>
+
+        <a class="logout" href="#">LOGOUT</a>
+      </aside>
+
+      <main class="main-content">
+        <h1>LOKASI</h1>
+
+        <section class="location-page-grid">
+          <article class="panel location-map-panel" aria-labelledby="location-map-title">
+            <div class="panel-heading">
+              <div>
+                <h2 id="location-map-title">PETA POSISI</h2>
+                <p>Area 25 x 13 koordinat</p>
+              </div>
+              <span class="grid-size-badge">X 25 / Y 13</span>
+            </div>
+
+            <div class="coordinate-map" aria-label="Peta lokasi 2 dimensi ukuran 25 x 13">
+              <button class="coordinate-marker active" type="button" style="--x: 6; --y: 4;" data-name="BUDI" data-x="6" data-y="4">
+                BUDI
+              </button>
+              <button class="coordinate-marker" type="button" style="--x: 14; --y: 7;" data-name="JOKO" data-x="14" data-y="7">
+                JOKO
+              </button>
+              <button class="coordinate-marker" type="button" style="--x: 19; --y: 3;" data-name="SARI" data-x="19" data-y="3">
+                SARI
+              </button>
+            </div>
+          </article>
+
+          <aside class="panel location-detail-panel" aria-labelledby="location-detail-title">
+            <h2 id="location-detail-title">DETAIL POSISI</h2>
+
+            <div class="selected-worker">
+              <span>Pekerja</span>
+              <strong id="selectedName">BUDI</strong>
+            </div>
+
+            <dl class="position-meta">
+              <div>
+                <dt>Koordinat X</dt>
+                <dd id="selectedX">6</dd>
+              </div>
+              <div>
+                <dt>Koordinat Y</dt>
+                <dd id="selectedY">4</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const markers = document.querySelectorAll(".coordinate-marker");
+      const selectedName = document.getElementById("selectedName");
+      const selectedX = document.getElementById("selectedX");
+      const selectedY = document.getElementById("selectedY");
+
+      markers.forEach((marker) => {
+        marker.addEventListener("click", () => {
+          markers.forEach((item) => item.classList.remove("active"));
+          marker.classList.add("active");
+          selectedName.textContent = marker.dataset.name;
+          selectedX.textContent = marker.dataset.x;
+          selectedY.textContent = marker.dataset.y;
+        });
+      });
+    </script>
+  </body>
+</html>

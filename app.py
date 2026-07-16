@@ -35,6 +35,14 @@ def dashboard():
 def cctv_page():
     return render_template("cctv.html", config=get_ai_status())
 
+@app.route("/lokasi")
+def location_page():
+    return render_template("lokasi.html", config=get_ai_status())
+
+@app.route("/pekerja")
+def worker_page():
+    return render_template("pekerja.html", config=get_ai_status())
+
 # ==========================================
 # 2. PROXY STREAM & SNAPSHOT
 # ==========================================

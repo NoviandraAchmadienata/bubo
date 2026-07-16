@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pekerja - BUBO STRAP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-2">
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="BUBO STRAP">
+          <span class="brand-line">
+            <span>BUB</span>
+            <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
+          </span>
+          <span class="brand-line">STRAP</span>
+        </a>
+
+        <nav class="nav-menu" aria-label="Navigasi utama">
+          <a class="nav-item" href="/">BERANDA</a>
+          <a class="nav-item collapsible" href="/cctv">
+            <span>CCTV</span>
+            <span class="chevron"></span>
+          </a>
+          <a class="nav-item collapsible" href="/lokasi">
+            <span>LOKASI</span>
+            <span class="chevron"></span>
+          </a>
+          <a class="nav-item active collapsible outlined" href="/pekerja">
+            <span>PEKERJA</span>
+            <span class="chevron"></span>
+          </a>
+        </nav>
+
+        <a class="logout" href="#">LOGOUT</a>
+      </aside>
+
+      <main class="main-content">
+        <h1>PEKERJA</h1>
+
+        <section class="worker-page-grid">
+          <article class="panel worker-directory-panel" aria-labelledby="worker-directory-title">
+            <div class="panel-heading">
+              <div>
+                <h2 id="worker-directory-title">DAFTAR PEKERJA</h2>
+                <p>Data dummy sementara</p>
+              </div>
+              <span class="worker-count-badge">3 AKTIF</span>
+            </div>
+
+            <div class="worker-directory">
+              <button class="worker-card active" type="button" data-name="BUDI" data-id="P-001" data-status="OK" data-status-class="healthy" data-role="Operator Produksi" data-device="BUBO-001" data-heart="78" data-spo2="98" data-location="X 6 / Y 4">
+                <span class="avatar budi"></span>
+                <span>
+                  <strong>BUDI</strong>
+                  <small>P-001</small>
+                </span>
+                <em class="status healthy"><i></i>OK</em>
+              </button>
+
+              <button class="worker-card" type="button" data-name="JOKO" data-id="P-002" data-status="WARNING" data-status-class="warning" data-role="Teknisi Area" data-device="BUBO-002" data-heart="112" data-spo2="94" data-location="X 14 / Y 7">
+                <span class="avatar joko"></span>
+                <span>
+                  <strong>JOKO</strong>
+                  <small>P-002</small>
+                </span>
+                <em class="status warning"><i></i>WARNING</em>
+              </button>
+
+              <button class="worker-card" type="button" data-name="SARI" data-id="P-003" data-status="OK" data-status-class="healthy" data-role="Supervisor K3" data-device="BUBO-003" data-heart="82" data-spo2="97" data-location="X 19 / Y 3">
+                <span class="avatar sari"></span>
+                <span>
+                  <strong>SARI</strong>
+                  <small>P-003</small>
+                </span>
+                <em class="status healthy"><i></i>OK</em>
+              </button>
+            </div>
+          </article>
+
+          <aside class="panel worker-detail-panel" aria-labelledby="worker-detail-title">
+            <h2 id="worker-detail-title">DETAIL PEKERJA</h2>
+
+            <div class="worker-profile-card">
+              <span class="avatar budi" id="selectedAvatar"></span>
+              <div>
+                <strong id="selectedWorkerName">BUDI</strong>
+                <small id="selectedWorkerId">P-001</small>
+              </div>
+              <span class="status healthy" id="selectedWorkerStatus"><i></i>OK</span>
+            </div>
+
+            <dl class="worker-detail-meta">
+              <div>
+                <dt>Posisi</dt>
+                <dd id="selectedWorkerRole">Operator Produksi</dd>
+              </div>
+              <div>
+                <dt>Perangkat</dt>
+                <dd id="selectedWorkerDevice">BUBO-001</dd>
+              </div>
+              <div>
+                <dt>Heart Rate</dt>
+                <dd><span id="selectedWorkerHeart">78</span> BPM</dd>
+              </div>
+              <div>
+                <dt>SpO2</dt>
+                <dd><span id="selectedWorkerSpo2">98</span>%</dd>
+              </div>
+              <div>
+                <dt>Lokasi</dt>
+                <dd id="selectedWorkerLocation">X 6 / Y 4</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const workerCards = document.querySelectorAll(".worker-card");
+      const selectedAvatar = document.getElementById("selectedAvatar");
+      const selectedWorkerName = document.getElementById("selectedWorkerName");
+      const selectedWorkerId = document.getElementById("selectedWorkerId");
+      const selectedWorkerStatus = document.getElementById("selectedWorkerStatus");
+      const selectedWorkerRole = document.getElementById("selectedWorkerRole");
+      const selectedWorkerDevice = document.getElementById("selectedWorkerDevice");
+      const selectedWorkerHeart = document.getElementById("selectedWorkerHeart");
+      const selectedWorkerSpo2 = document.getElementById("selectedWorkerSpo2");
+      const selectedWorkerLocation = document.getElementById("selectedWorkerLocation");
+
+      workerCards.forEach((card) => {
+        card.addEventListener("click", () => {
+          workerCards.forEach((item) => item.classList.remove("active"));
+          card.classList.add("active");
+
+          const avatarClass = card.dataset.name.toLowerCase();
+          selectedAvatar.className = `avatar ${avatarClass}`;
+          selectedWorkerName.textContent = card.dataset.name;
+          selectedWorkerId.textContent = card.dataset.id;
+          selectedWorkerStatus.className = `status ${card.dataset.statusClass}`;
+          selectedWorkerStatus.innerHTML = `<i></i>${card.dataset.status}`;
+          selectedWorkerRole.textContent = card.dataset.role;
+          selectedWorkerDevice.textContent = card.dataset.device;
+          selectedWorkerHeart.textContent = card.dataset.heart;
+          selectedWorkerSpo2.textContent = card.dataset.spo2;
+          selectedWorkerLocation.textContent = card.dataset.location;
+        });
+      });
+    </script>
+  </body>
+</html>
