@@ -18,7 +18,7 @@ IMG_SIZE = int(os.getenv("IMG_SIZE", "320"))
 DISPLAY_WIDTH = os.getenv("DISPLAY_WIDTH")
 DISPLAY_WIDTH = int(DISPLAY_WIDTH) if DISPLAY_WIDTH else None
 STREAM_TIMEOUT = float(os.getenv("STREAM_TIMEOUT", "10.0"))
-JPEG_QUALITY = int(os.getenv("JPEG_QUALITY", "60"))
+JPEG_QUALITY = int(os.getenv("JPEG_QUALITY", "80"))
 ENABLE_YOLO = os.getenv("ENABLE_YOLO", "1") == "1"
 
 # Memaksa TCP agar stream RTSP stabil dan tidak glitch.

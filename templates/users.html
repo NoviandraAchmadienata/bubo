@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Pengguna — BUBO STRAP</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-3">
+  <style>
+    /* ============================================
+       USERS PAGE SPECIFIC STYLES
+    ============================================ */
+    .users-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .user-stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f4f6fa;
+      color: var(--orange);
+    }
+    .stat-icon svg { width: 24px; height: 24px; }
+    .stat-val { font-size: 24px; font-weight: 900; line-height: 1.2; }
+    .stat-lbl { font-size: 11px; font-weight: 700; color: var(--muted); }
+    
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .search-wrap {
+      position: relative;
+      width: 300px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--orange);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 11px;
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+    }
+    .btn-add {
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+    .btn-add:hover { opacity: 0.9; }
+    
+    /* Users Table */
+    .users-panel {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      overflow-x: auto;
+    }
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .users-table th {
+      background: #f4f6fa;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .users-table th:first-child { border-radius: 8px 0 0 8px; }
+    .users-table th:last-child { border-radius: 0 8px 8px 0; }
+    .users-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+      vertical-align: middle;
+    }
+    .users-table tr:last-child td { border-bottom: none; }
+    
+    .role-badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+    .role-admin { background: #0f172a; color: #fff; }
+    .role-spv { background: #fef3c7; color: #b45309; }
+    .role-opr { background: #f1f5f9; color: #475569; }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .status-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .status-aktif { color: #16a34a; }
+    .status-aktif::before { background: #16a34a; }
+    .status-non { color: #dc2626; }
+    .status-non::before { background: #dc2626; }
+    
+    .action-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 900;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn-edit { border: 1.5px solid var(--orange); color: var(--orange); }
+    .btn-edit:hover { background: #fff8ee; }
+    .btn-del { border: 1.5px solid #dc2626; color: #dc2626; margin-left: 6px; }
+    .btn-del:hover { background: #fef2f2; }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-title { font-size: 18px; font-weight: 900; }
+    .modal-close {
+      background: transparent; border: none; font-size: 20px;
+      color: var(--muted); cursor: pointer;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block; font-size: 11px; font-weight: 800;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%; padding: 10px; border: 1.5px solid var(--line);
+      border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit;
+    }
+    .form-input:focus { outline: none; border-color: var(--orange); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;
+    }
+    .btn-cancel {
+      padding: 10px 16px; background: #f1f5f9; color: #475569;
+      border: none; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;
+    }
+    .btn-save {
+      padding: 10px 16px; background: var(--orange); color: #fff;
+      border: none; border-radius: 8px; font-weight: 900; font-size: 12px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="BUBO STRAP">
+        <span class="brand-line"><span>BUB</span><img src="{{ url_for('static', filename='bubo-mark.png') }}" alt=""></span>
+        <span class="brand-line">STRAP</span>
+      </a>
+      <nav class="nav-menu" aria-label="Navigasi utama">
+        <a class="nav-item" href="/">BERANDA</a>
+        <a class="nav-item collapsible" href="/cctv"><span>CCTV</span><span class="chevron"></span></a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/cctv">Putar Ulang</a>
+          <a class="nav-sub-item" href="/cctv">Tersimpan</a>
+          <a class="nav-sub-item" href="/cctv">Pengaturan</a>
+        </div>
+        <a class="nav-item collapsible" href="/lokasi"><span>LOKASI</span><span class="chevron"></span></a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/lokasi">Peta Lokasi</a>
+          <a class="nav-sub-item" href="/lokasi">Zona Aktif</a>
+        </div>
+        <a class="nav-item active collapsible outlined" href="/pekerja"><span>PEKERJA</span><span class="chevron"></span></a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/pekerja">Daftar Pekerja</a>
+          <a class="nav-sub-item" href="/laporan">Laporan &amp; Log</a>
+          <a class="nav-sub-item active" href="/users">Manajemen Pengguna</a>
+        </div>
+      </nav>
+      <form action="{{ url_for('logout') }}" method="post"><button class="logout" type="submit">LOGOUT</button></form>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1>MANAJEMEN PENGGUNA</h1>
+        <button class="notif-bell" aria-label="Notifikasi">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="users-stats">
+        <div class="user-stat-card">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.total }}</div>
+            <div class="stat-lbl">TOTAL PENGGUNA</div>
+          </div>
+        </div>
+        <div class="user-stat-card">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.admin }}</div>
+            <div class="stat-lbl">ADMINISTRATOR</div>
+          </div>
+        </div>
+        <div class="user-stat-card">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.aktif }}</div>
+            <div class="stat-lbl">AKUN AKTIF</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="Cari nama atau username...">
+        </div>
+        <button class="btn-add" id="btnAdd">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+          Tambah Pengguna
+        </button>
+      </div>
+
+      <!-- Users Table -->
+      <div class="users-panel">
+        <table class="users-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>NO</th>
+              <th>NAMA LENGKAP</th>
+              <th>USERNAME</th>
+              <th>ROLE</th>
+              <th>DEPARTEMEN</th>
+              <th>STATUS</th>
+              <th>TERAKHIR LOGIN</th>
+              <th>AKSI</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody">
+            {% for u in users %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ u.name }}</td>
+              <td>{{ u.username }}</td>
+              <td><span class="role-badge {% if u.role == 'Admin' %}role-admin{% elif u.role == 'Supervisor' %}role-spv{% else %}role-opr{% endif %}">{{ u.role }}</span></td>
+              <td>{{ u.department }}</td>
+              <td><span class="status-badge {% if u.status == 'Aktif' %}status-aktif{% else %}status-non{% endif %}">{{ u.status }}</span></td>
+              <td>{{ u.last_login or '-' }}</td>
+              <td>
+                <button class="action-btn btn-edit" onclick="editUser({{ u.id }}, '{{ u.name }}', '{{ u.username }}', '{{ u.role }}', '{{ u.department }}', '{{ u.status }}')">Edit</button>
+                <button class="action-btn btn-del" onclick="deleteUser({{ u.id }})">Del</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal Tambah/Edit Pengguna -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">Tambah Pengguna</h2>
+        <button class="modal-close" id="btnClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="userId">
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap</label>
+          <input type="text" id="userName" class="form-input" placeholder="Masukkan nama">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="userUsername" class="form-input" placeholder="Masukkan username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="userPassword" class="form-input" placeholder="Masukkan password (kosongkan jika tidak diubah)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select id="userRole" class="form-input">
+            <option>Operator</option>
+            <option>Supervisor</option>
+            <option>Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Departemen</label>
+          <input type="text" id="userDept" class="form-input" placeholder="Masukkan departemen">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="userStatus" class="form-input">
+            <option>Aktif</option>
+            <option>Nonaktif</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" id="btnCancel">Batal</button>
+          <button class="btn-save" id="btnSave">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260716-3"></script>
+  <script>
+    // Search Filter
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      let filter = this.value.toLowerCase();
+      let rows = document.querySelectorAll('#usersTable tbody tr');
+      rows.forEach(row => {
+        let name = row.cells[1].textContent.toLowerCase();
+        let username = row.cells[2].textContent.toLowerCase();
+        if (name.includes(filter) || username.includes(filter)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+
+    // Modal logic
+    const modal = document.getElementById('userModal');
+    const modalTitle = document.querySelector('.modal-title');
+    document.getElementById('btnAdd').addEventListener('click', () => {
+      document.getElementById('userId').value = '';
+      document.getElementById('userName').value = '';
+      document.getElementById('userUsername').value = '';
+      document.getElementById('userPassword').value = '';
+      document.getElementById('userDept').value = '';
+      document.getElementById('userRole').value = 'Operator';
+      document.getElementById('userStatus').value = 'Aktif';
+      modalTitle.textContent = 'Tambah Pengguna';
+      modal.classList.add('active');
+    });
+    document.getElementById('btnClose').addEventListener('click', () => modal.classList.remove('active'));
+    document.getElementById('btnCancel').addEventListener('click', () => modal.classList.remove('active'));
+
+    // Users are rendered dynamically via Jinja
+
+    // Edit user
+    window.editUser = function(id, name, username, role, dept, status) {
+      document.getElementById('userId').value = id;
+      document.getElementById('userName').value = name;
+      document.getElementById('userUsername').value = username;
+      document.getElementById('userPassword').value = ''; // leave empty unless changing
+      document.getElementById('userRole').value = role;
+      document.getElementById('userDept').value = dept;
+      document.getElementById('userStatus').value = status;
+      modalTitle.textContent = 'Edit Pengguna';
+      modal.classList.add('active');
+    }
+
+    // Delete user
+    window.deleteUser = async function(id) {
+      if(confirm('Yakin ingin menghapus pengguna ini?')) {
+        await fetch('/api/users/' + id, { method: 'DELETE' });
+        window.location.reload();
+      }
+    }
+
+    // Save user
+    document.getElementById('btnSave').addEventListener('click', async () => {
+      const id = document.getElementById('userId').value;
+      const data = {
+        name: document.getElementById('userName').value,
+        username: document.getElementById('userUsername').value,
+        password: document.getElementById('userPassword').value,
+        role: document.getElementById('userRole').value,
+        department: document.getElementById('userDept').value,
+        status: document.getElementById('userStatus').value,
+      };
+
+      if (id) {
+        // Edit
+        await fetch('/api/users/' + id, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+      } else {
+        // Add
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+      }
+      modal.classList.remove('active');
+      window.location.reload();
+    });
+    // Users are now fully integrated via Jinja!
+  </script>
+</body>
+</html>

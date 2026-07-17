@@ -24,3 +24,16 @@ Cloudflare dashboard path:
 6. Save the route.
 
 Keep `ssh.bubostrap.my.id` as-is unless you intentionally want to replace SSH access.
+
+## Cache dan sesi Cloudflare
+
+Agar sidebar dan halaman tidak tercampur dengan aset atau HTML lama, jangan aktifkan aturan **Cache Everything** untuk `dashboard.bubostrap.my.id`. Bila ada Cache Rule, buat pengecualian untuk `*dashboard.bubostrap.my.id/*` dengan **Bypass cache**. Aplikasi juga mengirim `Cache-Control: no-store` untuk halaman dan API, sementara versi URL CSS/JavaScript diperbarui saat rilis.
+
+Tambahkan variabel berikut pada service production sebelum restart:
+
+```ini
+Environment=FLASK_SECRET_KEY=<nilai-acak-panjang>
+Environment=SESSION_COOKIE_SECURE=1
+```
+
+`SESSION_COOKIE_SECURE=1` hanya untuk hostname HTTPS Cloudflare; biarkan `0` saat menjalankan HTTP di localhost.

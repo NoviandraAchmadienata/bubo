@@ -1,153 +1,371 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pekerja - BUBO STRAP</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-2">
-  </head>
-  <body>
-    <div class="app-layout">
-      <aside class="sidebar">
-        <a class="brand" href="/" aria-label="BUBO STRAP">
-          <span class="brand-line">
-            <span>BUB</span>
-            <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
-          </span>
-          <span class="brand-line">STRAP</span>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pekerja — BUBO STRAP</title>
+  <meta name="description" content="Halaman data pekerja sistem monitoring keselamatan konstruksi BUBO STRAP">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-3">
+  <style>
+    /* Compact pekerja card */
+    .pekerja-card { padding: 10px 12px; }
+    .pekerja-card-avatar { width: 54px; height: 54px; }
+    .pekerja-card-name { font-size: 16px; margin-bottom: 6px; }
+    .pekerja-card-info { font-size: 11px; line-height: 1.6; }
+    .pekerja-vitals-grid { gap: 6px; margin-top: 8px; }
+    .pekerja-vital-item { padding: 6px 8px; }
+    .pekerja-notify-wrap { margin-top: 8px; }
+    .pekerja-notify-btn { padding: 8px 24px; font-size: 13px; }
+    .tanda-vital-panel { padding: 10px 12px; }
+    .tanda-vital-panel .tv-header { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="BUBO STRAP">
+        <span class="brand-line">
+          <span>BUB</span>
+          <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
+        </span>
+        <span class="brand-line">STRAP</span>
+      </a>
+
+      <nav class="nav-menu" aria-label="Navigasi utama">
+        <a class="nav-item" href="/">BERANDA</a>
+
+        <a class="nav-item collapsible" href="/cctv">
+          <span>CCTV</span>
+          <span class="chevron"></span>
         </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/cctv">Putar Ulang</a>
+          <a class="nav-sub-item" href="/cctv">Tersimpan</a>
+          <a class="nav-sub-item" href="/cctv">Pengaturan</a>
+        </div>
 
-        <nav class="nav-menu" aria-label="Navigasi utama">
-          <a class="nav-item" href="/">BERANDA</a>
-          <a class="nav-item collapsible" href="/cctv">
-            <span>CCTV</span>
-            <span class="chevron"></span>
-          </a>
-          <a class="nav-item collapsible" href="/lokasi">
-            <span>LOKASI</span>
-            <span class="chevron"></span>
-          </a>
-          <a class="nav-item active collapsible outlined" href="/pekerja">
-            <span>PEKERJA</span>
-            <span class="chevron"></span>
-          </a>
-        </nav>
+        <a class="nav-item collapsible" href="/lokasi">
+          <span>LOKASI</span>
+          <span class="chevron"></span>
+        </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/lokasi">Peta Lokasi</a>
+          <a class="nav-sub-item" href="/lokasi">Zona Aktif</a>
+        </div>
 
-        <a class="logout" href="#">LOGOUT</a>
-      </aside>
+        <a class="nav-item active collapsible outlined" href="/pekerja">
+          <span>PEKERJA</span>
+          <span class="chevron"></span>
+        </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item active" href="/pekerja">Daftar Pekerja</a>
+          <a class="nav-sub-item" href="/laporan">Laporan &amp; Log</a>
+          <a class="nav-sub-item" href="/users">Manajemen Pengguna</a>
+        </div>
+      </nav>
 
-      <main class="main-content">
+      <form action="{{ url_for('logout') }}" method="post"><button class="logout" type="submit">LOGOUT</button></form>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      <!-- Page header -->
+      <div class="page-header">
         <h1>PEKERJA</h1>
+        <button class="notif-bell" aria-label="Notifikasi">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span class="notif-badge">1</span>
+        </button>
+      </div>
 
-        <section class="worker-page-grid">
-          <article class="panel worker-directory-panel" aria-labelledby="worker-directory-title">
-            <div class="panel-heading">
-              <div>
-                <h2 id="worker-directory-title">DAFTAR PEKERJA</h2>
-                <p>Data dummy sementara</p>
+      <!-- ===== PEKERJA LAYOUT ===== -->
+      <div class="pekerja-layout">
+
+        <!-- LEFT: Worker list -->
+        <aside class="pekerja-list-panel" aria-labelledby="pekerja-list-title">
+          <h2 id="pekerja-list-title" style="font-size:14px;margin-bottom:4px">ID PEKERJA</h2>
+          <div style="font-size:12px;color:var(--muted);font-weight:800;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">STATUS</div>
+
+          <div class="worker-head" style="display:none"></div>
+
+          <!-- Worker rows -->
+          {% for w in workers %}
+          <div class="worker-row {% if loop.first %}selected{% endif %}" onclick="selectPekerja(this,'{{ w.name }}','{{ w.avatar_class }}','{{ w.uid }}','{{ w.blood_type }}','{{ w.address }}','{{ w.phone }}','{{ w.status }}', {{ w.hr }}, {{ w.spo2 }})">
+            <div class="worker-id">
+              <span class="avatar {{ w.avatar_class }}"></span>
+              <strong>{{ w.init }}</strong>
+            </div>
+            <span class="status {{ w.status }}"><i></i>{{ w.status | upper }}</span>
+          </div>
+          {% endfor %}
+        </aside>
+
+        <!-- RIGHT: Worker detail -->
+        <div class="pekerja-right-col">
+
+          <!-- Top row: detail card + tanda vital -->
+          <div class="pekerja-top-row">
+
+            <!-- Worker detail card -->
+            <div class="pekerja-card">
+              <div class="pekerja-card-avatar-wrap">
+                <div class="pekerja-card-avatar {{ workers[0].avatar_class if workers else '' }}" id="pAvatar"></div>
               </div>
-              <span class="worker-count-badge">3 AKTIF</span>
+              <div class="pekerja-card-name" id="pName">{{ workers[0].init if workers else 'TIDAK ADA DATA' }}</div>
+
+              <div class="pekerja-card-info">
+                <div><span>NAMA &nbsp;: </span><span id="pFullName">{{ workers[0].name if workers else '-' }}</span></div>
+                <div><span>ID &nbsp;&nbsp;&nbsp;&nbsp;: </span><span id="pId">{{ workers[0].uid if workers else '-' }}</span></div>
+                <div><span>GOL D. : </span><span id="pBlood">{{ workers[0].blood_type if workers else '-' }}</span></div>
+                <div><span>ALAMAT: </span><span id="pAddress">{{ workers[0].address if workers else '-' }}</span></div>
+                <div><span>NO HP &nbsp;: </span><span id="pPhone">{{ workers[0].phone if workers else '-' }}</span></div>
+              </div>
+
+              <!-- Vitals grid 2x2 -->
+              <div class="pekerja-vitals-grid">
+                <!-- Heart Rate -->
+                <div class="pekerja-vital-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  <div>
+                    <div class="pekerja-vital-value"><span id="p_hr">85.7</span><sup>BPM</sup></div>
+                    <div class="pekerja-vital-label">Detak Jantung</div>
+                  </div>
+                </div>
+
+                <!-- SpO2 -->
+                <div class="pekerja-vital-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  <div>
+                    <div class="pekerja-vital-value"><span id="p_ox">99</span><sup>%</sup></div>
+                    <div class="pekerja-vital-label">Kadar Oksigen</div>
+                  </div>
+                </div>
+
+                <!-- Activity -->
+                <div class="pekerja-vital-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  <div>
+                    <div class="pekerja-vital-value" style="font-size:15px">Bekerja</div>
+                    <div class="pekerja-vital-label">Aktivitas</div>
+                  </div>
+                </div>
+
+                <!-- APD -->
+                <div class="pekerja-vital-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                  </svg>
+                  <div>
+                    <div class="pekerja-vital-value" id="pAPDTxt" style="font-size:15px;color:var(--green)">Lengkap</div>
+                    <div class="pekerja-vital-label">Kelengkapan APD</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notify button -->
+              <div class="pekerja-notify-wrap">
+                <div class="pekerja-notify-label">Notifikasi Manual</div>
+                <button class="pekerja-notify-btn" id="pNotifyBtn">Bunyikan</button>
+              </div>
             </div>
 
-            <div class="worker-directory">
-              <button class="worker-card active" type="button" data-name="BUDI" data-id="P-001" data-status="OK" data-status-class="healthy" data-role="Operator Produksi" data-device="BUBO-001" data-heart="78" data-spo2="98" data-location="X 6 / Y 4">
-                <span class="avatar budi"></span>
-                <span>
-                  <strong>BUDI</strong>
-                  <small>P-001</small>
-                </span>
-                <em class="status healthy"><i></i>OK</em>
-              </button>
+            <!-- Tanda Vital panel -->
+            <div class="tanda-vital-panel">
+              <div class="tv-header">
+                <div class="tv-label">Tanda Vital</div>
+                <div class="tv-status" id="pTvStatus">NORMAL</div>
+              </div>
 
-              <button class="worker-card" type="button" data-name="JOKO" data-id="P-002" data-status="WARNING" data-status-class="warning" data-role="Teknisi Area" data-device="BUBO-002" data-heart="112" data-spo2="94" data-location="X 14 / Y 7">
-                <span class="avatar joko"></span>
-                <span>
-                  <strong>JOKO</strong>
-                  <small>P-002</small>
-                </span>
-                <em class="status warning"><i></i>WARNING</em>
-              </button>
+              <div class="gauges-row-large">
+                <!-- Kadar Oksigen gauge (large) -->
+                <div class="gauge-container-lg" style="padding: 20px 0; text-align: center;">
+                  <div class="gauge-label-top" style="margin-bottom: 10px;">Kadar Oksigen</div>
+                  <div class="gauge-value-lg" id="p_oxGauge" style="font-size:36px; color:var(--text); margin-bottom: 5px; position:static;">99%</div>
+                  <div style="font-size: 13px; color: var(--muted); font-weight: 800;">Oksigen Normal</div>
+                </div>
 
-              <button class="worker-card" type="button" data-name="SARI" data-id="P-003" data-status="OK" data-status-class="healthy" data-role="Supervisor K3" data-device="BUBO-003" data-heart="82" data-spo2="97" data-location="X 19 / Y 3">
-                <span class="avatar sari"></span>
-                <span>
-                  <strong>SARI</strong>
-                  <small>P-003</small>
-                </span>
-                <em class="status healthy"><i></i>OK</em>
-              </button>
+                <!-- Detak Jantung gauge (large) -->
+                <div class="gauge-container-lg" style="padding: 20px 0; text-align: center;">
+                  <div class="gauge-label-top" style="margin-bottom: 10px;">Detak Jantung</div>
+                  <div class="gauge-value-lg" id="p_hrGauge" style="font-size:36px; color:var(--text); margin-bottom: 5px; position:static;">85.7 bpm</div>
+                  <div style="font-size: 13px; color: var(--muted); font-weight: 800;">Detak Stabil</div>
+                </div>
+              </div>
             </div>
-          </article>
+          </div>
 
-          <aside class="panel worker-detail-panel" aria-labelledby="worker-detail-title">
-            <h2 id="worker-detail-title">DETAIL PEKERJA</h2>
+          <!-- Bottom row: chart + APD panel -->
+          <div class="pekerja-bottom-row">
 
-            <div class="worker-profile-card">
-              <span class="avatar budi" id="selectedAvatar"></span>
-              <div>
-                <strong id="selectedWorkerName">BUDI</strong>
-                <small id="selectedWorkerId">P-001</small>
+            <!-- Heart rate chart -->
+            <div class="heart-chart-panel">
+              <h3>Tren Detak Jantung (Heart Rate)</h3>
+              <div style="position:relative;margin-left:32px;">
+                <span style="position:absolute;left:-30px;top:-4px;font-size:10px;color:#667085;font-weight:700">100</span>
+                <span style="position:absolute;left:-30px;top:36px;font-size:10px;color:#667085;font-weight:700">95</span>
+                <span style="position:absolute;left:-30px;top:76px;font-size:10px;color:#667085;font-weight:700">90</span>
+                <span style="position:absolute;left:-30px;top:116px;font-size:10px;color:#667085;font-weight:700">86</span>
+                <div class="chart-full">
+                  <svg viewBox="0 0 500 160" role="img" aria-label="Grafik tren detak jantung">
+                    <polyline id="p_hrPolyline" points="16,96 66,112 116,100 166,80 216,92 266,64 316,76 366,88 416,68 466,84"></polyline>
+                  </svg>
+                </div>
+                <!-- X-axis time labels -->
+                <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:#888;">
+                  <span>08:00</span>
+                  <span>08:10</span>
+                  <span>08:20</span>
+                  <span>08:30</span>
+                  <span>08:40</span>
+                  <span>08:50</span>
+                  <span>09:00</span>
+                  <span>09:10</span>
+                  <span>09:20</span>
+                  <span>09:30</span>
+                </div>
               </div>
-              <span class="status healthy" id="selectedWorkerStatus"><i></i>OK</span>
             </div>
 
-            <dl class="worker-detail-meta">
-              <div>
-                <dt>Posisi</dt>
-                <dd id="selectedWorkerRole">Operator Produksi</dd>
+            <!-- APD Terdeteksi panel -->
+            <div class="apd-panel-full">
+              <h3>APD Terdeteksi</h3>
+              <div class="apd-icons-vert">
+                <div class="apd-item-vert">
+                  <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="28" cy="34" rx="20" ry="6" fill="#f9a235" opacity="0.2"/>
+                    <path d="M9 36 Q9 16 28 13 Q47 16 47 36 Z" fill="#f9a235"/>
+                    <rect x="6" y="36" width="44" height="7" rx="3.5" fill="#e8921f"/>
+                    <rect x="20" y="11" width="16" height="5" rx="2.5" fill="#e8921f"/>
+                  </svg>
+                  <span>Safety Helm</span>
+                </div>
+                <div class="apd-item-vert">
+                  <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 14 L5 24 L5 52 L21 52 L21 26 L28 33 L35 26 L35 52 L51 52 L51 24 L44 14 L35 19 L28 12 L21 19 Z" fill="#f9a235"/>
+                    <path d="M21 19 L21 52" stroke="#e8921f" stroke-width="2.5"/>
+                    <path d="M35 19 L35 52" stroke="#e8921f" stroke-width="2.5"/>
+                    <rect x="5" y="38" width="16" height="4" rx="1.5" fill="#ffd07a" opacity="0.6"/>
+                    <rect x="35" y="38" width="16" height="4" rx="1.5" fill="#ffd07a" opacity="0.6"/>
+                  </svg>
+                  <span>Safety Vest</span>
+                </div>
+                <div class="apd-item-vert">
+                  <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="9" width="14" height="28" rx="5" fill="#5a4030"/>
+                    <path d="M10 35 L10 45 Q10 50 15 50 L42 50 Q47 50 47 45 L47 41 Q47 35 42 35 Z" fill="#5a4030"/>
+                    <rect x="10" y="44" width="37" height="5" rx="2.5" fill="#3a2820"/>
+                    <rect x="12" y="14" width="10" height="2.5" rx="1.25" fill="#7a6050"/>
+                  </svg>
+                  <span>Safety Boots</span>
+                </div>
+                <div class="apd-item-vert">
+                  <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 24 L14 42 Q14 50 21 50 L35 50 Q42 50 42 42 L42 24 Q42 19 38 19 L36 19 L36 12 Q36 9 34 9 Q31 9 31 12 L31 19 L29 19 L29 9 Q29 6 27 6 Q24 6 24 9 L24 19 L22 19 Q14 19 14 24 Z" fill="#26a870"/>
+                    <rect x="14" y="41" width="28" height="5" rx="2.5" fill="#1a8a5a"/>
+                  </svg>
+                  <span>Safety Gloves</span>
+                </div>
               </div>
-              <div>
-                <dt>Perangkat</dt>
-                <dd id="selectedWorkerDevice">BUBO-001</dd>
-              </div>
-              <div>
-                <dt>Heart Rate</dt>
-                <dd><span id="selectedWorkerHeart">78</span> BPM</dd>
-              </div>
-              <div>
-                <dt>SpO2</dt>
-                <dd><span id="selectedWorkerSpo2">98</span>%</dd>
-              </div>
-              <div>
-                <dt>Lokasi</dt>
-                <dd id="selectedWorkerLocation">X 6 / Y 4</dd>
-              </div>
-            </dl>
-          </aside>
-        </section>
-      </main>
-    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 
-    <script>
-      const workerCards = document.querySelectorAll(".worker-card");
-      const selectedAvatar = document.getElementById("selectedAvatar");
-      const selectedWorkerName = document.getElementById("selectedWorkerName");
-      const selectedWorkerId = document.getElementById("selectedWorkerId");
-      const selectedWorkerStatus = document.getElementById("selectedWorkerStatus");
-      const selectedWorkerRole = document.getElementById("selectedWorkerRole");
-      const selectedWorkerDevice = document.getElementById("selectedWorkerDevice");
-      const selectedWorkerHeart = document.getElementById("selectedWorkerHeart");
-      const selectedWorkerSpo2 = document.getElementById("selectedWorkerSpo2");
-      const selectedWorkerLocation = document.getElementById("selectedWorkerLocation");
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260716-3"></script>
+  <script>
+    // ==========================================
+    // WORKER SELECTION (Pekerja page)
+    // ==========================================
 
-      workerCards.forEach((card) => {
-        card.addEventListener("click", () => {
-          workerCards.forEach((item) => item.classList.remove("active"));
-          card.classList.add("active");
+    {% if workers %}
+    window.currentHrBase = {{ workers[0].hr }};
+    window.currentOxBase = {{ workers[0].spo2 }};
+    {% else %}
+    window.currentHrBase = 80;
+    window.currentOxBase = 98;
+    {% endif %}
 
-          const avatarClass = card.dataset.name.toLowerCase();
-          selectedAvatar.className = `avatar ${avatarClass}`;
-          selectedWorkerName.textContent = card.dataset.name;
-          selectedWorkerId.textContent = card.dataset.id;
-          selectedWorkerStatus.className = `status ${card.dataset.statusClass}`;
-          selectedWorkerStatus.innerHTML = `<i></i>${card.dataset.status}`;
-          selectedWorkerRole.textContent = card.dataset.role;
-          selectedWorkerDevice.textContent = card.dataset.device;
-          selectedWorkerHeart.textContent = card.dataset.heart;
-          selectedWorkerSpo2.textContent = card.dataset.spo2;
-          selectedWorkerLocation.textContent = card.dataset.location;
-        });
-      });
-    </script>
-  </body>
+    function selectPekerja(rowEl, name, avatarClass, id, blood, address, phone, status, hr, spo2) {
+      document.querySelectorAll('.worker-row').forEach(r => r.classList.remove('selected'));
+      rowEl.classList.add('selected');
+
+      document.getElementById('pAvatar').className      = 'pekerja-card-avatar ' + avatarClass;
+      document.getElementById('pName').textContent      = name.split(' ')[0].toUpperCase();
+      document.getElementById('pFullName').textContent  = name;
+      document.getElementById('pId').textContent        = id;
+      document.getElementById('pBlood').textContent     = blood;
+      document.getElementById('pAddress').textContent   = address;
+      document.getElementById('pPhone').textContent     = phone;
+      
+      // Update vitals base
+      window.currentHrBase = hr;
+      window.currentOxBase = spo2;
+      
+      // Update APD & Status texts
+      document.getElementById('pTvStatus').textContent = status === 'danger' ? 'DANGER' : (status === 'warning' ? 'WARNING' : 'NORMAL');
+      document.getElementById('pTvStatus').style.color = status === 'danger' ? 'var(--red)' : (status === 'warning' ? 'var(--orange)' : 'var(--green)');
+      
+      const pAPDTxt = document.getElementById('pAPDTxt');
+      pAPDTxt.textContent = status === 'danger' ? 'Tidak Lengkap' : 'Lengkap';
+      pAPDTxt.style.color = status === 'danger' ? 'var(--red)' : 'var(--green)';
+    }
+
+    // ==========================================
+    // DUMMY HEART RATE & OXYGEN LIVE UPDATE
+    // ==========================================
+    const p_hrEl      = document.getElementById('p_hr');
+    const p_oxEl      = document.getElementById('p_ox');
+    const p_hrGaugeEl = document.getElementById('p_hrGauge');
+    const p_oxGaugeEl = document.getElementById('p_oxGauge');
+    
+    const p_hrPolyline = document.getElementById('p_hrPolyline');
+    
+    // Initial points for chart x in increments of 50
+    let p_hrPoints = [16,66,116,166,216,266,316,366,416,466].map((x) => ({x, y: 80 + Math.random()*20 - 10}));
+
+    setInterval(() => {
+      const hr = window.currentHrBase + Math.round((Math.random() * 10) - 5);
+      const ox = window.currentOxBase + Math.round((Math.random() * 2) - 1);
+      
+      p_hrEl.textContent      = hr.toFixed(1);
+      p_oxEl.textContent      = ox;
+      p_hrGaugeEl.textContent = hr.toFixed(1) + ' bpm';
+      p_oxGaugeEl.textContent = ox + '%';
+      
+      // Update chart
+      p_hrPoints.push({x: 516, y: 150 - hr});
+      for(let i=0; i<p_hrPoints.length-1; i++) {
+         p_hrPoints[i].y = p_hrPoints[i+1].y;
+      }
+      p_hrPoints[p_hrPoints.length-1].y = 160 - ((hr - 60) / 80 * 160); // Map hr (60-140) to Y (160-0)
+      
+      p_hrPolyline.setAttribute('points', p_hrPoints.map(p => `${p.x},${p.y}`).join(' '));
+    }, 1500);
+
+    // ==========================================
+    // NOTIFY BUTTON
+    // ==========================================
+    document.getElementById('pNotifyBtn').addEventListener('click', function () {
+      const name = document.getElementById('pName').textContent;
+      this.textContent = 'Membunyikan…';
+      this.disabled = true;
+      setTimeout(() => {
+        this.textContent = 'Bunyikan';
+        this.disabled = false;
+        alert('Notifikasi manual telah dikirim ke pekerja: ' + name);
+      }, 1500);
+    });
+  </script>
+</body>
 </html>

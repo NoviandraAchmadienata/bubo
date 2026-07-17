@@ -1,69 +1,272 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CCTV - BUBO STRAP</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260701-1">
-  </head>
-  <body>
-    <div class="app-layout">
-      <aside class="sidebar">
-        <a class="brand" href="/" aria-label="BUBO STRAP">
-          <span class="brand-line">
-            <span>BUB</span>
-            <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
-          </span>
-          <span class="brand-line">STRAP</span>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CCTV — BUBO STRAP</title>
+  <meta name="description" content="Halaman CCTV monitoring sistem keselamatan konstruksi BUBO STRAP">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-3">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="BUBO STRAP">
+        <span class="brand-line">
+          <span>BUB</span>
+          <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
+        </span>
+        <span class="brand-line">STRAP</span>
+      </a>
+
+      <nav class="nav-menu" aria-label="Navigasi utama">
+        <a class="nav-item" href="/">BERANDA</a>
+
+        <!-- CCTV active + expanded -->
+        <a class="nav-item active collapsible" href="/cctv">
+          <span>CCTV</span>
+          <span class="chevron"></span>
         </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item active" href="/cctv">Putar Ulang</a>
+          <a class="nav-sub-item" href="/cctv">Tersimpan</a>
+          <a class="nav-sub-item" href="/cctv">Pengaturan</a>
+        </div>
 
-        <nav class="nav-menu" aria-label="Navigasi utama">
-          <a class="nav-item" href="/">BERANDA</a>
-          <a class="nav-item active collapsible" href="/cctv">
-            <span>CCTV</span>
-            <span class="chevron"></span>
-          </a>
-          <a class="nav-item collapsible" href="/lokasi">
-            <span>LOKASI</span>
-            <span class="chevron"></span>
-          </a>
-          <a class="nav-item collapsible outlined" href="/pekerja">
-            <span>PEKERJA</span>
-            <span class="chevron"></span>
-          </a>
-        </nav>
+        <a class="nav-item collapsible" href="/lokasi">
+          <span>LOKASI</span>
+          <span class="chevron"></span>
+        </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/lokasi">Peta Lokasi</a>
+          <a class="nav-sub-item" href="/lokasi">Zona Aktif</a>
+        </div>
 
-        <a class="logout" href="#">LOGOUT</a>
-      </aside>
+        <a class="nav-item collapsible outlined" href="/pekerja">
+          <span>PEKERJA</span>
+          <span class="chevron"></span>
+        </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/pekerja">Daftar Pekerja</a>
+          <a class="nav-sub-item" href="/laporan">Laporan &amp; Log</a>
+          <a class="nav-sub-item" href="/users">Manajemen Pengguna</a>
+        </div>
+      </nav>
 
-      <main class="main-content">
+      <form action="{{ url_for('logout') }}" method="post"><button class="logout" type="submit">LOGOUT</button></form>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      <!-- Page header -->
+      <div class="page-header">
         <h1>CCTV</h1>
+        <button class="notif-bell" aria-label="Notifikasi">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span class="notif-badge">1</span>
+        </button>
+      </div>
 
-        <section class="cctv-overview">
-          <article class="panel cctv-live-panel" aria-labelledby="cctv-live-title">
-            <div class="panel-heading">
-              <div>
-                <h2 id="cctv-live-title">CCTV AKTIF</h2>
-                <p>CAM-01 Area Produksi</p>
+      <!-- ===== CCTV OVERVIEW: video left | analysis right ===== -->
+      <section class="cctv-overview">
+
+        <!-- LEFT COLUMN: video player + cam grid -->
+        <div class="cctv-left-col">
+
+          <!-- Video player card -->
+          <div class="video-player-wrap">
+            <!-- Stream -->
+            <div class="cctv-stream" style="position:relative; width:100%; height:100%;" aria-label="Stream CCTV langsung">
+              <img id="stream" src="" alt="CCTV stream deteksi" style="width:100%;height:100%;object-fit:contain;display:block;">
+
+              <!-- OSD Overlays -->
+              <div class="video-overlay">
+                <div class="video-cam-label">CAM 1</div>
+                <div class="video-timestamp" id="videoTimestamp">--:--:-- — Memuat</div>
               </div>
-              <span class="live-badge">LIVE</span>
             </div>
 
-            <div class="stream-frame cctv-page-stream">
-              <img id="stream" alt="CCTV stream deteksi">
-              <span class="stream-label">CCTV STREAM</span>
+            <!-- Controls bar -->
+            <div class="video-controls">
+              <!-- Crop/resize -->
+              <button class="ctrl-btn" title="Crop">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2v14a2 2 0 002 2h14M18 22V8a2 2 0 00-2-2H2"/>
+                </svg>
+              </button>
+
+              <!-- Prev frame -->
+              <button class="ctrl-btn" title="Frame sebelumnya">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+              </button>
+
+              <!-- Speed -->
+              <span class="speed-badge">1X</span>
+
+              <!-- Next frame -->
+              <button class="ctrl-btn" title="Frame selanjutnya">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+                </svg>
+              </button>
+
+              <!-- HD badge -->
+              <span class="hd-badge">HD</span>
+
+              <div class="ctrl-divider"></div>
+
+              <!-- Timecode -->
+              <span class="ctrl-time" id="ctrlTime">LIVE</span>
+
+              <div class="ctrl-divider"></div>
+
+              <!-- Rewind 10s -->
+              <button class="ctrl-btn" title="Mundur 10 detik">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"/>
+                </svg>
+              </button>
+
+              <!-- Pause/Play -->
+              <button class="ctrl-btn" id="pauseBtn" title="Pause / Play" onclick="togglePause()">
+                <svg id="pauseIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </button>
+
+              <!-- Forward 10s -->
+              <button class="ctrl-btn" title="Maju 10 detik">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z"/>
+                </svg>
+              </button>
+
+              <div class="ctrl-divider"></div>
+
+              <!-- Screenshot -->
+              <button class="ctrl-btn" title="Ambil screenshot" onclick="takeScreenshot()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </button>
+
+              <!-- Fullscreen -->
+              <button class="ctrl-btn" title="Layar penuh" onclick="toggleFullscreen()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/>
+                </svg>
+              </button>
+
+              <!-- More -->
+              <button class="ctrl-btn" title="Opsi lainnya">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                </svg>
+              </button>
             </div>
-          </article>
 
-          <aside class="panel detection-summary" aria-labelledby="summary-title">
-            <h2 id="summary-title">RINGKASAN DETEKSI</h2>
+            <!-- Filmstrip -->
+            <div class="filmstrip" id="filmstrip" aria-label="Filmstrip timeline">
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+              <div class="filmstrip-placeholder"></div>
+            </div>
+          </div>
 
-            <div class="detected-card">
-              <span>Pekerja Terdeteksi</span>
-              <strong id="workerDetected">3</strong>
-              <small>Dummy sementara</small>
+          <!-- Camera grid (1 cam for prototype) -->
+          <div class="cam-grid" role="list">
+            <div class="cam-grid-item active" role="listitem">
+              <img id="grid-cam1" src="/video_feed" alt="CAM 1">
+              <span class="cam-grid-label">CAM 1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Analysis panel -->
+        <aside class="analysis-panel" aria-labelledby="analysis-title">
+          <div class="analysis-header" id="analysis-title">
+            ANALISA KEAMANAN (CAM 1)
+          </div>
+          <div class="analysis-sub">DETAIL &amp; AKTIVITAS CAM 1</div>
+          <div class="analysis-body">
+
+            <!-- Workers detected -->
+            <div class="analysis-stat-row">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              <div>
+                <div class="analysis-stat-title">PEKERJA TERDETEKSI</div>
+                <div class="analysis-stat-val" id="workerDetected">—</div>
+              </div>
             </div>
 
+            <!-- Violation row -->
+            <div class="analysis-violation-row">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <div>
+                <div class="analysis-stat-title">PELANGGAR (1 ORANG)</div>
+                <div class="analysis-stat-val" style="color:var(--red)">ADIT</div>
+              </div>
+            </div>
+
+            <!-- Violation details -->
+            <div>
+              <div class="analysis-section-title" style="margin-bottom:8px">Detail Pelanggaran</div>
+              <ul class="violation-list">
+                <li>1. TIDAK PATUH APD</li>
+              </ul>
+            </div>
+
+            <!-- Label legend -->
+            <div>
+              <div class="analysis-section-title" style="margin-bottom:8px">Label</div>
+              <div class="label-legend">
+                <div class="legend-item">
+                  <div class="legend-dot good"></div>
+                  <span>GOOD</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot danger"></div>
+                  <span>DANGER</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Warning icon -->
+            <div class="violation-warning-wrap">
+              <div class="violation-warning-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <div class="violation-warning-label">PELANGGAR<br>TERDETEKSI</div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="analysis-btn-row">
+              <button class="btn-primary" id="saveRecBtn">SIMPAN REKAMAN</button>
+              <button class="btn-outline" id="logViolBtn">LOG PELANGGARAN</button>
+            </div>
+
+            <!-- Camera metadata -->
             <dl class="camera-meta">
               <div>
                 <dt>Status Kamera</dt>
@@ -82,86 +285,148 @@
                 <dd id="lastFrame">Menunggu</dd>
               </div>
             </dl>
-          </aside>
-        </section>
-      </main>
-    </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
 
-    <script>
-      const stream = document.getElementById("stream");
-      const workerDetected = document.getElementById("workerDetected");
-      const cameraStatus = document.getElementById("cameraStatus");
-      const cameraFps = document.getElementById("cameraFps");
-      const cameraResolution = document.getElementById("cameraResolution");
-      const lastFrame = document.getElementById("lastFrame");
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260716-3"></script>
+  <script>
+    // ==========================================
+    // 1. MESIN POLLING VIDEO (ANTI-CLOUDFLARE CACHE)
+    // ==========================================
+    const stream          = document.getElementById("stream");
+    const gridCam1        = document.getElementById("grid-cam1");
+    const pauseBtn        = document.getElementById("pauseBtn");
+    const pauseIcon       = document.getElementById("pauseIcon");
 
-      // ==========================================
-      // 1. MESIN POLLING VIDEO (ANTI-CLOUDFLARE CACHE)
-      // ==========================================
-      let isFetchingFrame = false;
+    const cameraStatus    = document.getElementById("cameraStatus");
+    const cameraFps       = document.getElementById("cameraFps");
+    const cameraResolution= document.getElementById("cameraResolution");
+    const lastFrame       = document.getElementById("lastFrame");
+    const videoTimestamp  = document.getElementById("videoTimestamp");
 
-      async function fetchLatestFrame() {
-        if (isFetchingFrame) return;
-        isFetchingFrame = true;
+    let isPaused = false;
 
-        try {
-          // Mengambil 1 frame gambar dengan timestamp acak agar Cloudflare selalu memberikan gambar baru
-          const response = await fetch('/api/snapshot?t=' + new Date().getTime());
+    let isFetchingFrame = false;
+
+    async function fetchLatestFrame() {
+      if (isFetchingFrame) return;
+      isFetchingFrame = true;
+
+      try {
+        const response = await fetch('/api/snapshot?t=' + new Date().getTime());
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const objectURL = URL.createObjectURL(blob);
           
-          if (response.ok) {
-            const blob = await response.blob();
-            const objectURL = URL.createObjectURL(blob);
-            
-            stream.src = objectURL;
-            
-            // Hapus dari memori browser segera setelah gambar dimuat agar RAM tidak bocor
-            stream.onload = () => {
-              URL.revokeObjectURL(objectURL);
-            };
-          }
-        } catch (error) {
-          stream.alt = "Menunggu stream kamera...";
-        } finally {
-          isFetchingFrame = false;
+          stream.src = objectURL;
+          
+          stream.onload = () => {
+            URL.revokeObjectURL(objectURL);
+          };
         }
+      } catch (error) {
+        stream.alt = "Menunggu stream kamera...";
+      } finally {
+        isFetchingFrame = false;
       }
+    }
 
-      // Tarik gambar setiap 50ms (~20 FPS)
-      setInterval(fetchLatestFrame, 500);
+    setInterval(fetchLatestFrame, 250);
+    
+    // Update timestamp clock periodically
+    setInterval(() => {
+      const now = new Date();
+      videoTimestamp.textContent =
+        now.toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'}) + ' ' +
+        now.toLocaleTimeString('id-ID');
+    }, 1000);
 
-      // ==========================================
-      // 2. MESIN UPDATE STATUS & STATISTIK
-      // ==========================================
-      function dummyWorkerCount() {
-        const hour = new Date().getSeconds();
-        return 2 + (hour % 3);
+    // ==========================================
+    // 2. MESIN UPDATE STATUS & STATISTIK
+    // ==========================================
+    function dummyWorkerCount() {
+      const hour = new Date().getSeconds();
+      return (2 + (hour % 3)) + " ORANG";
+    }
+
+    async function loadStatus() {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const data = await response.json();
+
+        workerDetected.textContent  = dummyWorkerCount();
+        cameraStatus.textContent    = data.status || "unknown";
+        cameraFps.textContent       = data.fps ?? "0.0";
+        cameraResolution.textContent =
+          data.frame_width && data.frame_height
+            ? `${data.frame_width} x ${data.frame_height}`
+            : "Menunggu";
+        lastFrame.textContent =
+          data.seconds_since_frame === null
+            ? "Menunggu"
+            : `${data.seconds_since_frame}s lalu`;
+
+      } catch (error) {
+        cameraStatus.textContent = "offline";
       }
+    }
 
-      async function loadStatus() {
-        try {
-          const response = await fetch("/api/status", { cache: "no-store" });
-          const data = await response.json();
+    loadStatus();
+    setInterval(loadStatus, 3000);
 
-          workerDetected.textContent = dummyWorkerCount();
-          cameraStatus.textContent = data.status || "unknown";
-          cameraFps.textContent = data.fps ?? "0.0";
-          cameraResolution.textContent =
-            data.frame_width && data.frame_height
-              ? `${data.frame_width} x ${data.frame_height}`
-              : "Menunggu";
-          lastFrame.textContent =
-            data.seconds_since_frame === null
-              ? "Menunggu"
-              : `${data.seconds_since_frame}s lalu`;
-
-        } catch (error) {
-          cameraStatus.textContent = "offline";
-        }
+    // ==========================================
+    // 3. KONTROL UI
+    // ==========================================
+    function togglePause() {
+      isPaused = !isPaused;
+      const icon = document.getElementById('pauseIcon');
+      if (isPaused) {
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+      } else {
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>';
       }
+    }
 
-      loadStatus();
-      // Update statistik teks setiap 3 detik
-      setInterval(loadStatus, 3000);
-    </script>
-  </body>
+    function takeScreenshot() {
+      const a = document.createElement('a');
+      a.href = "/api/snapshot";
+      a.download = 'bubo-snapshot-' + Date.now() + '.jpg';
+      a.click();
+    }
+
+    function toggleFullscreen() {
+      const el = document.querySelector('.video-main');
+      if (!document.fullscreenElement) {
+        el.requestFullscreen && el.requestFullscreen();
+      } else {
+        document.exitFullscreen && document.exitFullscreen();
+      }
+    }
+
+    // Cam grid click — highlight selected (single cam)
+    document.querySelectorAll('.cam-grid-item').forEach((item, i) => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.cam-grid-item').forEach(c => c.classList.remove('active'));
+        item.classList.add('active');
+        document.getElementById('analysis-title').textContent =
+          'ANALISA KEAMANAN (CAM ' + (i + 1) + ')';
+        document.querySelector('.analysis-sub').textContent =
+          'DETAIL & AKTIVITAS CAM ' + (i + 1);
+      });
+    });
+
+    // Live clock in timecode
+    function updateCtrlTime() {
+      const now = new Date();
+      const t = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      document.getElementById('ctrlTime').textContent = 'LIVE — ' + t;
+    }
+    setInterval(updateCtrlTime, 1000);
+    updateCtrlTime();
+  </script>
+</body>
 </html>
