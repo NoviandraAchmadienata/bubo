@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Manajemen Pengguna — BUBO STRAP</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260717-3">
   <style>
     /* ============================================
        USERS PAGE SPECIFIC STYLES
@@ -116,18 +116,7 @@
       vertical-align: middle;
     }
     .users-table tr:last-child td { border-bottom: none; }
-    
-    .role-badge {
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: 0.02em;
-    }
-    .role-admin { background: #0f172a; color: #fff; }
-    .role-spv { background: #fef3c7; color: #b45309; }
-    .role-opr { background: #f1f5f9; color: #475569; }
-    
+        
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -226,13 +215,11 @@
         <a class="nav-item collapsible" href="/cctv"><span>CCTV</span><span class="chevron"></span></a>
         <div class="nav-sub-items">
           <a class="nav-sub-item" href="/cctv">Putar Ulang</a>
-          <a class="nav-sub-item" href="/cctv">Tersimpan</a>
-          <a class="nav-sub-item" href="/cctv">Pengaturan</a>
+          <a class="nav-sub-item" href="/cctv/tersimpan">Tersimpan</a>
         </div>
         <a class="nav-item collapsible" href="/lokasi"><span>LOKASI</span><span class="chevron"></span></a>
         <div class="nav-sub-items">
           <a class="nav-sub-item" href="/lokasi">Peta Lokasi</a>
-          <a class="nav-sub-item" href="/lokasi">Zona Aktif</a>
         </div>
         <a class="nav-item active collapsible outlined" href="/pekerja"><span>PEKERJA</span><span class="chevron"></span></a>
         <div class="nav-sub-items">
@@ -271,8 +258,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
           </div>
           <div>
-            <div class="stat-val">{{ stats.admin }}</div>
-            <div class="stat-lbl">ADMINISTRATOR</div>
+            <div class="stat-val">{{ stats.total }}</div>
+            <div class="stat-lbl">PENGGUNA TERDAFTAR</div>
           </div>
         </div>
         <div class="user-stat-card">
@@ -306,7 +293,6 @@
               <th>NO</th>
               <th>NAMA LENGKAP</th>
               <th>USERNAME</th>
-              <th>ROLE</th>
               <th>DEPARTEMEN</th>
               <th>STATUS</th>
               <th>TERAKHIR LOGIN</th>
@@ -319,12 +305,11 @@
               <td>{{ loop.index }}</td>
               <td>{{ u.name }}</td>
               <td>{{ u.username }}</td>
-              <td><span class="role-badge {% if u.role == 'Admin' %}role-admin{% elif u.role == 'Supervisor' %}role-spv{% else %}role-opr{% endif %}">{{ u.role }}</span></td>
               <td>{{ u.department }}</td>
               <td><span class="status-badge {% if u.status == 'Aktif' %}status-aktif{% else %}status-non{% endif %}">{{ u.status }}</span></td>
               <td>{{ u.last_login or '-' }}</td>
               <td>
-                <button class="action-btn btn-edit" onclick="editUser({{ u.id }}, '{{ u.name }}', '{{ u.username }}', '{{ u.role }}', '{{ u.department }}', '{{ u.status }}')">Edit</button>
+                <button class="action-btn btn-edit" onclick="editUser({{ u.id }}, '{{ u.name }}', '{{ u.username }}', '{{ u.department }}', '{{ u.status }}')">Edit</button>
                 <button class="action-btn btn-del" onclick="deleteUser({{ u.id }})">Del</button>
               </td>
             </tr>
@@ -358,14 +343,6 @@
           <input type="password" id="userPassword" class="form-input" placeholder="Masukkan password (kosongkan jika tidak diubah)">
         </div>
         <div class="form-group">
-          <label class="form-label">Role</label>
-          <select id="userRole" class="form-input">
-            <option>Operator</option>
-            <option>Supervisor</option>
-            <option>Admin</option>
-          </select>
-        </div>
-        <div class="form-group">
           <label class="form-label">Departemen</label>
           <input type="text" id="userDept" class="form-input" placeholder="Masukkan departemen">
         </div>
@@ -384,7 +361,7 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260716-3"></script>
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260717-3"></script>
   <script>
     // Search Filter
     document.getElementById('searchInput').addEventListener('keyup', function() {
@@ -410,7 +387,6 @@
       document.getElementById('userUsername').value = '';
       document.getElementById('userPassword').value = '';
       document.getElementById('userDept').value = '';
-      document.getElementById('userRole').value = 'Operator';
       document.getElementById('userStatus').value = 'Aktif';
       modalTitle.textContent = 'Tambah Pengguna';
       modal.classList.add('active');
@@ -421,12 +397,11 @@
     // Users are rendered dynamically via Jinja
 
     // Edit user
-    window.editUser = function(id, name, username, role, dept, status) {
+    window.editUser = function(id, name, username, dept, status) {
       document.getElementById('userId').value = id;
       document.getElementById('userName').value = name;
       document.getElementById('userUsername').value = username;
       document.getElementById('userPassword').value = ''; // leave empty unless changing
-      document.getElementById('userRole').value = role;
       document.getElementById('userDept').value = dept;
       document.getElementById('userStatus').value = status;
       modalTitle.textContent = 'Edit Pengguna';
@@ -448,7 +423,6 @@
         name: document.getElementById('userName').value,
         username: document.getElementById('userUsername').value,
         password: document.getElementById('userPassword').value,
-        role: document.getElementById('userRole').value,
         department: document.getElementById('userDept').value,
         status: document.getElementById('userStatus').value,
       };

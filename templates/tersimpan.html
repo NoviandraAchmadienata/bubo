@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rekaman Tersimpan — BUBO STRAP</title>
+  <meta name="description" content="Halaman laporan dan log pelanggaran sistem monitoring keselamatan konstruksi BUBO STRAP">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260717-3">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="BUBO STRAP">
+        <span class="brand-line">
+          <span>BUB</span>
+          <img src="{{ url_for('static', filename='bubo-mark.png') }}" alt="">
+        </span>
+        <span class="brand-line">STRAP</span>
+      </a>
+
+      <nav class="nav-menu" aria-label="Navigasi utama">
+        <a class="nav-item" href="/">BERANDA</a>
+
+        <a class="nav-item collapsible" href="/cctv">
+          <span>CCTV</span>
+          <span class="chevron"></span>
+        </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/cctv">Putar Ulang</a>
+          <a class="nav-sub-item active" href="/cctv/tersimpan">Tersimpan</a>
+        </div>
+
+        <a class="nav-item collapsible" href="/lokasi">
+          <span>LOKASI</span>
+          <span class="chevron"></span>
+        </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/lokasi">Peta Lokasi</a>
+        </div>
+
+        <a class="nav-item collapsible outlined" href="/pekerja">
+          <span>PEKERJA</span>
+          <span class="chevron"></span>
+        </a>
+        <div class="nav-sub-items">
+          <a class="nav-sub-item" href="/pekerja">Daftar Pekerja</a>
+          <a class="nav-sub-item" href="/laporan">Laporan &amp; Log</a>
+          <a class="nav-sub-item" href="/users">Manajemen Pengguna</a>
+        </div>
+      </nav>
+
+      <form action="{{ url_for('logout') }}" method="post"><button class="logout" type="submit">LOGOUT</button></form>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      <!-- Page header -->
+      <div class="page-header">
+        <h1>REKAMAN TERSIMPAN</h1>
+        <button class="notif-bell" aria-label="Notifikasi">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span class="notif-badge">1</span>
+        </button>
+      </div>
+
+      <div class="laporan-layout">
+
+        <!-- ===== REKAMAN TERSIMPAN ===== -->
+        <div class="laporan-panel">
+          <div class="laporan-panel-header">
+            <h2>REKAMAN TERSIMPAN</h2>
+            <button class="laporan-filter-btn" onclick="alert('Ekspor rekaman…')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Ekspor
+            </button>
+          </div>
+
+          <table class="laporan-table" aria-label="Tabel rekaman tersimpan">
+            <thead>
+              <tr>
+                <th>Nama File</th>
+                <th>Tanggal</th>
+                <th>Durasi</th>
+                <th>Kamera</th>
+                <th>Ukuran</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in videos %}
+              <tr>
+                <td>{{ v.filename }}</td>
+                <td>{{ v.date }}</td>
+                <td>{{ v.duration }}</td>
+                <td>{{ v.camera }}</td>
+                <td>{{ v.size }}</td>
+                <td><button class="laporan-filter-btn" style="padding:5px 12px;font-size:12px" onclick="alert('Memutar rekaman…')">▶ Putar</button></td>
+              </tr>
+              {% endfor %}
+              {% if not videos %}
+              <tr>
+                <td colspan="6" style="text-align:center;color:var(--muted)">Belum ada rekaman tersimpan.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260717-3"></script>
+  <script>
+    // ==========================================
+    // LOG FILTER
+    // ==========================================
+    function filterLog(level, btn) {
+      document.querySelectorAll('.laporan-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const rows = document.querySelectorAll('#logTable tbody tr');
+      rows.forEach(row => {
+        const sev = row.dataset.severity;
+        row.style.display = (level === 'all' || sev === level) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

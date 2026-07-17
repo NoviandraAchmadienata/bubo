@@ -6,7 +6,7 @@
   <title>BUBO STRAP — Beranda</title>
   <meta name="description" content="Dashboard utama sistem monitoring keselamatan konstruksi BUBO STRAP">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260716-3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260717-3">
   <style>
     /* ── Page-level overrides for Dashboard ── */
     .app-layout { grid-template-columns: 240px minmax(0,1fr); }
@@ -26,9 +26,15 @@
       background: #111;
       border-radius: 8px;
       overflow: hidden;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: 16 / 6.5; max-height: 390px;
     }
     .cam-single img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .cam-single.cctv-expanded { aspect-ratio: 16 / 9; max-height: none; }
+    .cam-single.cctv-compact { aspect-ratio: 16 / 7.5; max-height: 330px; }
+    .db-cctv-actions { position:absolute; top:10px; right:10px; z-index:2; display:flex; gap:6px; }
+    .db-cctv-actions button { width:32px; height:32px; display:grid; place-items:center; background:rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.65); border-radius:6px; color:#fff; cursor:pointer; padding:0; }
+    .db-cctv-actions button:hover { background:rgba(0,0,0,.82); }
+    .db-cctv-actions svg { width:17px; height:17px; }
 
     .cam-label {
       position: absolute;
@@ -176,29 +182,6 @@
     .db-notify-btn:hover { background: var(--orange-dark); }
 
     /* ── Tanda Vital right col ── */
-    .db-vitals-col { padding: 4px 8px; }
-
-    .db-tv-title  { font-size: 12px; font-weight: 800; color: #555; text-align: center; margin-bottom: 0px; }
-    .db-tv-status { font-size: 16px; font-weight: 900; color: var(--green); text-align: center; margin-bottom: 6px; }
-
-    .db-gauges-labels {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 6px; margin-bottom: 3px;
-    }
-    .db-glabel { text-align: center; font-size: 10px; font-weight: 800; color: var(--muted); }
-
-    .db-gauges-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .db-gauge-wrap { text-align: center; }
-    .db-gauge-svg  { width: 100%; max-width: 110px; display: block; margin: 0 auto; height: auto; }
-    .db-gauge-val  { font-size: 12px; font-weight: 900; margin-top: 1px; }
-
-    /* ── Bottom row: chart + APD ── */
-    .db-bottom-row {
-      display: grid;
-      grid-template-columns: minmax(0,1fr) 120px;
-      gap: 14px;
-      align-items: start;
-    }
 
     .db-chart-title { font-size: 11px; font-weight: 800; text-align: center; margin-bottom: 6px; }
     .db-chart-wrap  { position: relative; margin-left: 28px; }
@@ -412,6 +395,10 @@
       display: block;
       flex-shrink: 0;
     }
+      /* Panel vital, grafik, dan ikon APD dihapus dari tampilan karena datanya sudah diringkas. */
+    .db-vitals-col, .db-bottom-row, .tanda-vital-panel, .pekerja-bottom-row { display: none; }
+    .db-worker-inner { grid-template-columns: 170px minmax(0, 1fr); }
+    .pekerja-main-grid { grid-template-columns: minmax(0, 1fr); }
   </style>
 
 </head>
@@ -440,8 +427,7 @@
         </a>
         <div class="nav-sub-items">
           <a class="nav-sub-item" href="/cctv">Putar Ulang</a>
-          <a class="nav-sub-item" href="/cctv">Tersimpan</a>
-          <a class="nav-sub-item" href="/cctv">Pengaturan</a>
+          <a class="nav-sub-item" href="/cctv/tersimpan">Tersimpan</a>
         </div>
 
         <a class="nav-item collapsible" href="/lokasi">
@@ -449,7 +435,6 @@
         </a>
         <div class="nav-sub-items">
           <a class="nav-sub-item" href="/lokasi">Peta Lokasi</a>
-          <a class="nav-sub-item" href="/lokasi">Zona Aktif</a>
         </div>
 
         <a class="nav-item collapsible outlined" href="/pekerja">
@@ -487,6 +472,7 @@
         </div>
         <div class="cam-single">
           <img id="snap1" src="" alt="CAM 1">
+          <div class="db-cctv-actions"><button type="button" id="cctvSizeToggle" aria-label="Perbesar tampilan CCTV" title="Perbesar" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></div>
           <span class="cam-label">CAM 1</span>
         </div>
       </div>
@@ -694,7 +680,7 @@
     </main>
   </div>
 
-  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260716-3"></script>
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260717-3"></script>
   <script>
     // ==========================================
     // 1. CCTV FEED
@@ -803,5 +789,6 @@
       document.body.prepend(t);
     });
   </script>
+  <script>const cctvToggle = document.getElementById("cctvSizeToggle"); if (cctvToggle) cctvToggle.addEventListener("click", () => { const camera = document.querySelector(".cam-single"); const expanded = camera.classList.toggle("cctv-expanded"); camera.classList.remove("cctv-compact"); cctvToggle.setAttribute("aria-pressed", String(expanded)); cctvToggle.setAttribute("aria-label", expanded ? "Perkecil tampilan CCTV" : "Perbesar tampilan CCTV"); cctvToggle.title = expanded ? "Perkecil" : "Perbesar"; });</script>
 </body>
 </html>

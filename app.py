@@ -116,6 +116,12 @@ def dashboard():
 def cctv_page():
     return render_template("cctv.html", config=get_ai_status())
 
+
+@app.route("/cctv/tersimpan")
+@login_required
+def cctv_saved_page():
+    return render_template("tersimpan.html", config=get_ai_status(), videos=get_all_videos())
+
 @app.route("/lokasi")
 @login_required
 def lokasi_page():
@@ -272,7 +278,7 @@ def api_users():
     if request.method == "POST":
         data = request.json
         conn.execute('INSERT INTO users (name, username, password, role, department, status) VALUES (?, ?, ?, ?, ?, ?)',
-                     (data['name'], data['username'], data['password'], data['role'], data['department'], data['status']))
+                     (data['name'], data['username'], data['password'], 'Operator', data['department'], data['status']))
         conn.commit()
         conn.close()
         return jsonify({"success": True}), 201
@@ -293,8 +299,8 @@ def api_user_detail(user_id):
     
     if request.method == "PUT":
         data = request.json
-        conn.execute('UPDATE users SET name = ?, username = ?, role = ?, department = ?, status = ? WHERE id = ?',
-                     (data['name'], data['username'], data['role'], data['department'], data['status'], user_id))
+        conn.execute('UPDATE users SET name = ?, username = ?, department = ?, status = ? WHERE id = ?',
+                     (data['name'], data['username'], data['department'], data['status'], user_id))
         conn.commit()
         conn.close()
         return jsonify({"success": True})
