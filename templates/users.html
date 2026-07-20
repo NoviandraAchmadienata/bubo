@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Manajemen Pengguna — BUBO STRAP</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260717-3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260717-5">
   <style>
     /* ============================================
        USERS PAGE SPECIFIC STYLES
@@ -199,6 +199,7 @@
       padding: 10px 16px; background: var(--orange); color: #fff;
       border: none; border-radius: 8px; font-weight: 900; font-size: 12px; cursor: pointer;
     }
+    @media (max-width: 680px) { .users-stats { grid-template-columns: 1fr; gap: 10px; } .action-bar { align-items: stretch; flex-direction: column; gap: 10px; } .search-wrap { width: 100%; } .btn-add { justify-content: center; } .users-panel { padding: 12px; } }
   </style>
 </head>
 <body>
@@ -361,7 +362,7 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260717-3"></script>
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260717-5"></script>
   <script>
     // Search Filter
     document.getElementById('searchInput').addEventListener('keyup', function() {

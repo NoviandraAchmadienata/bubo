@@ -6,13 +6,14 @@
   <title>BUBO STRAP — Beranda</title>
   <meta name="description" content="Dashboard utama sistem monitoring keselamatan konstruksi BUBO STRAP">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260717-3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260717-5">
   <style>
     /* ── Page-level overrides for Dashboard ── */
     .app-layout { grid-template-columns: 240px minmax(0,1fr); }
 
     /* ── CCTV single-cam section ── */
     .db-cctv-section {
+      width: min(100%, 1240px);
       background: #fff;
       border-radius: 14px;
       box-shadow: var(--shadow);
@@ -20,6 +21,7 @@
       margin-bottom: 16px;
     }
     .db-cctv-section h2 { margin-bottom: 12px; font-size: 17px; }
+    .db-cctv-section.cctv-card-expanded { max-width: none; width: 100%; }
 
     .cam-single {
       position: relative;
@@ -399,6 +401,8 @@
     .db-vitals-col, .db-bottom-row, .tanda-vital-panel, .pekerja-bottom-row { display: none; }
     .db-worker-inner { grid-template-columns: 170px minmax(0, 1fr); }
     .pekerja-main-grid { grid-template-columns: minmax(0, 1fr); }
+    @media (max-width: 1024px) { .app-layout { grid-template-columns: 1fr; } .db-bottom-grid { grid-template-columns: 1fr; } .db-worker-inner { grid-template-columns: 170px minmax(0, 1fr); } }
+    @media (max-width: 680px) { .db-cctv-section { padding: 14px; } .cam-single { max-height: 280px; } .db-bottom-grid { gap: 14px; } .db-worker-panel, .db-lokasi-panel { padding: 12px; } .db-worker-inner { grid-template-columns: 1fr; } .db-wlist, .db-wdetail { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 10px; } .db-wdetail { padding-top: 10px; } .db-map-wrap, .db-map-wrap img { min-height: 240px; } }
   </style>
 
 </head>
@@ -680,7 +684,7 @@
     </main>
   </div>
 
-  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260717-3"></script>
+  <script src="{{ url_for('static', filename='sidebar.js') }}?v=20260717-5"></script>
   <script>
     // ==========================================
     // 1. CCTV FEED
@@ -789,6 +793,6 @@
       document.body.prepend(t);
     });
   </script>
-  <script>const cctvToggle = document.getElementById("cctvSizeToggle"); if (cctvToggle) cctvToggle.addEventListener("click", () => { const camera = document.querySelector(".cam-single"); const expanded = camera.classList.toggle("cctv-expanded"); camera.classList.remove("cctv-compact"); cctvToggle.setAttribute("aria-pressed", String(expanded)); cctvToggle.setAttribute("aria-label", expanded ? "Perkecil tampilan CCTV" : "Perbesar tampilan CCTV"); cctvToggle.title = expanded ? "Perkecil" : "Perbesar"; });</script>
+  <script>const cctvToggle = document.getElementById("cctvSizeToggle"); if (cctvToggle) cctvToggle.addEventListener("click", () => { const camera = document.querySelector(".cam-single"); const expanded = camera.classList.toggle("cctv-expanded"); document.querySelector(".db-cctv-section").classList.toggle("cctv-card-expanded", expanded); camera.classList.remove("cctv-compact"); cctvToggle.setAttribute("aria-pressed", String(expanded)); cctvToggle.setAttribute("aria-label", expanded ? "Perkecil tampilan CCTV" : "Perbesar tampilan CCTV"); cctvToggle.title = expanded ? "Perkecil" : "Perbesar"; });</script>
 </body>
 </html>

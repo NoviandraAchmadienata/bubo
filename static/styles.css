@@ -1900,3 +1900,45 @@ h2 {
   .analysis-btn-row { grid-template-columns: 1fr; }
   .gauges-row-large { grid-template-columns: 1fr; }
 }
+
+
+/* ===========================
+   MOBILE & TABLET REFINEMENTS
+=========================== */
+img, svg { max-width: 100%; }
+
+@media (max-width: 1024px) {
+  .main-content { padding: 24px 20px; }
+  .page-header { margin-bottom: 16px; }
+  .cctv-overview { gap: 16px; }
+  .analysis-panel { width: 100%; }
+  .video-controls { flex-wrap: wrap; gap: 6px; height: auto; padding: 8px; }
+  .filmstrip { overflow-x: auto; }
+  .laporan-panel, .users-panel { overflow-x: auto; }
+  .laporan-table, .users-table { min-width: 640px; }
+  .lokasi-layout, .lokasi-main-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 680px) {
+  body { overflow-x: hidden; }
+  .sidebar { gap: 12px; padding: 18px 14px; }
+  .brand { margin-bottom: 0; }
+  .brand-line { font-size: 24px; }
+  .brand-line img { height: 22px; width: 22px; }
+  .nav-menu { grid-template-columns: 1fr; }
+  .nav-item { min-height: 42px; padding: 0 16px; }
+  .nav-sub-item { padding-left: 18px; }
+  .logout { margin: 8px 0 0 16px; }
+  .main-content { padding: 18px 12px; }
+  .page-header h1 { font-size: 22px; }
+  .page-header { align-items: center; }
+  .cctv-overview, .dashboard-grid, .pekerja-layout, .pekerja-top-row { gap: 12px; }
+  .video-player-wrap, .analysis-panel, .laporan-panel, .users-panel { border-radius: 10px; }
+  .video-controls .ctrl-divider, .video-controls .ctrl-time { display: none; }
+  .cam-grid { grid-template-columns: 1fr; }
+  .laporan-stat-row { grid-template-columns: 1fr; }
+  .laporan-panel { padding: 14px; }
+  .laporan-panel-header { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .laporan-filter-row { flex-wrap: wrap; }
+  .map-wrap, .aerial-map { min-height: 260px; }
+}
