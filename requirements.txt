@@ -3,3 +3,6 @@ opencv-python
 torch
 ultralytics
 openvino
+paho-mqtt
+psycopg2-binary
+python-dotenv
