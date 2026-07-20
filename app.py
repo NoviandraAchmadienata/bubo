@@ -2,12 +2,24 @@ import os
 import requests
 import cv2
 import time
+import json
+from datetime import datetime
 from functools import wraps
 from flask import Flask, Response, jsonify, render_template, request, redirect, session, url_for
 from bubo_db import init_db, get_db_connection
 
+try:
+    import app_mqtt
+    MQTT_AVAILABLE = True
+except ImportError as exc:
+    app_mqtt = None
+    MQTT_AVAILABLE = False
+    print(f"MQTT unavailable: {exc}")
+
 app = Flask(__name__)
 app.config.update(
+    MQTT_AUTOSTART=os.getenv("MQTT_AUTOSTART", "1") == "1",
+    MQTT_INITIALIZED=False,
     SECRET_KEY=os.getenv("FLASK_SECRET_KEY") or os.urandom(32),
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
@@ -331,6 +343,162 @@ def api_stop():
     except requests.exceptions.RequestException:
         return jsonify(get_ai_status()), 503
 
+
+def initialize_mqtt():
+    """Start the background MQTT subscriber once per Flask process."""
+    if not MQTT_AVAILABLE or not app.config["MQTT_AUTOSTART"]:
+        return False
+    if app.config["MQTT_INITIALIZED"]:
+        return True
+    try:
+        app_mqtt.start_mqtt_client()
+        app.config["MQTT_INITIALIZED"] = True
+        app.logger.info("MQTT client initialized")
+        return True
+    except Exception as exc:
+        app.logger.error("MQTT initialization failed: %s", exc)
+        return False
+
+
+@app.before_request
+def initialize_mqtt_on_first_request():
+    initialize_mqtt()
+
+
+def mqtt_connection_or_error():
+    if not MQTT_AVAILABLE:
+        return None, (jsonify({"error": "MQTT dependency is unavailable."}), 503)
+    client = app_mqtt.mqtt_client_instance
+    if not client or not client.is_connected():
+        return None, (jsonify({"error": "MQTT broker is not connected."}), 503)
+    return client, None
+
+
+@app.route("/api/mqtt/status")
+@login_required
+def mqtt_status():
+    client = app_mqtt.mqtt_client_instance if MQTT_AVAILABLE else None
+    connected = bool(client and client.is_connected())
+    return jsonify({
+        "status": "connected" if connected else ("disconnected" if MQTT_AVAILABLE else "unavailable"),
+        "broker": os.getenv("MQTT_BROKER", "127.0.0.1"),
+        "port": int(os.getenv("MQTT_PORT", "1883")),
+        "autostart": app.config["MQTT_AUTOSTART"],
+        "timestamp": datetime.now().isoformat(),
+    }), 200 if MQTT_AVAILABLE else 503
+
+
+@app.route("/api/workers/realtime")
+@login_required
+def workers_realtime():
+    if not MQTT_AVAILABLE:
+        return jsonify({"error": "MQTT/PostgreSQL dependency is unavailable."}), 503
+    conn = app_mqtt.get_mqtt_db_connection()
+    if not conn:
+        return jsonify({"error": "PostgreSQL is unavailable."}), 503
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT w.id, w.worker_code, w.name, w.job_role, w.device_status,
+                       w.firmware_version, w.last_seen_at,
+                       l.position_x, l.position_y, l.estimated_error, l.measured_at
+                FROM workers w
+                LEFT JOIN LATERAL (
+                    SELECT position_x, position_y, estimated_error, measured_at
+                    FROM location_readings WHERE worker_id = w.id
+                    ORDER BY measured_at DESC LIMIT 1
+                ) l ON TRUE
+                WHERE w.is_active = TRUE
+                ORDER BY w.worker_code
+            """)
+            rows = cursor.fetchall()
+        workers = [{
+            "id": row[0], "worker_code": row[1], "name": row[2],
+            "job_role": row[3], "device_status": row[4], "firmware_version": row[5],
+            "last_seen_at": row[6].isoformat() if row[6] else None,
+            "position_x": row[7], "position_y": row[8], "estimated_error": row[9],
+            "location_time": row[10].isoformat() if row[10] else None,
+        } for row in rows]
+        return jsonify({"total": len(workers), "workers": workers, "timestamp": datetime.now().isoformat()})
+    except Exception as exc:
+        app.logger.exception("Unable to read realtime workers")
+        return jsonify({"error": str(exc)}), 500
+    finally:
+        conn.close()
+
+
+@app.route("/api/worker/<worker_code>/send-command", methods=["POST"])
+@login_required
+def send_worker_command(worker_code):
+    client, error = mqtt_connection_or_error()
+    if error:
+        return error
+    data = request.get_json(silent=True) or {}
+    action = data.get("action")
+    if action not in {"buzzer", "led", "reset"}:
+        return jsonify({"error": "action must be buzzer, led, or reset."}), 400
+    command = {"action": action}
+    if action == "buzzer":
+        command["duration"] = min(max(int(data.get("duration", 500)), 50), 10000)
+    elif action == "led":
+        command["state"] = data.get("state", "on")
+    topic = f"bubo/worker/{worker_code}/command"
+    result = client.client.publish(topic, json.dumps(command), qos=1)
+    if result.rc != 0:
+        return jsonify({"error": f"MQTT publish failed with code {result.rc}."}), 502
+    return jsonify({"success": True, "topic": topic, "payload": command}), 202
+
+
+@app.route("/api/worker/<worker_code>/location/history")
+@login_required
+def worker_location_history(worker_code):
+    if not MQTT_AVAILABLE:
+        return jsonify({"error": "MQTT/PostgreSQL dependency is unavailable."}), 503
+    conn = app_mqtt.get_mqtt_db_connection()
+    if not conn:
+        return jsonify({"error": "PostgreSQL is unavailable."}), 503
+    limit = min(max(request.args.get("limit", 100, type=int), 1), 500)
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT l.position_x, l.position_y, l.estimated_error, l.algorithm, l.measured_at
+                FROM location_readings l JOIN workers w ON w.id = l.worker_id
+                WHERE w.worker_code = %s ORDER BY l.measured_at DESC LIMIT %s
+            """, (worker_code, limit))
+            rows = cursor.fetchall()
+        return jsonify({"worker_code": worker_code, "locations": [
+            {"x": row[0], "y": row[1], "estimated_error": row[2], "algorithm": row[3],
+             "timestamp": row[4].isoformat()} for row in rows
+        ]})
+    finally:
+        conn.close()
+
+
+@app.route("/api/dashboard/live-stats")
+@login_required
+def dashboard_live_stats():
+    if not MQTT_AVAILABLE:
+        return jsonify({"error": "MQTT/PostgreSQL dependency is unavailable."}), 503
+    conn = app_mqtt.get_mqtt_db_connection()
+    if not conn:
+        return jsonify({"error": "PostgreSQL is unavailable."}), 503
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT device_status FROM workers WHERE is_active = TRUE")
+            statuses = [row[0] for row in cursor.fetchall()]
+            cursor.execute("SELECT COUNT(*) FROM alerts WHERE is_active = TRUE")
+            active_alerts = cursor.fetchone()[0]
+        client = app_mqtt.mqtt_client_instance
+        return jsonify({
+            "timestamp": datetime.now().isoformat(),
+            "mqtt": {"status": "connected" if client and client.is_connected() else "disconnected"},
+            "workers": {"total": len(statuses), "online": statuses.count("online"),
+                        "offline": statuses.count("offline"), "maintenance": statuses.count("maintenance")},
+            "active_alerts": active_alerts,
+        })
+    finally:
+        conn.close()
+
 @app.route("/health")
 def health():
     status = get_ai_status()
@@ -338,7 +506,8 @@ def health():
     return jsonify(status), http_status
 
 if __name__ == "__main__":
-    init_db()  # Initialize database
+    init_db()  # SQLite remains the local user/session store.
+    initialize_mqtt()
     
     host = os.getenv("FLASK_HOST", "0.0.0.0")
     port = int(os.getenv("FLASK_PORT", "5000"))

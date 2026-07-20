@@ -6,3 +6,5 @@ openvino
 paho-mqtt
 psycopg2-binary
 python-dotenv
+joblib
+scikit-learn==1.6.1

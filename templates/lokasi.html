@@ -260,7 +260,7 @@
           <div class="rssi-map-header">
             <div>
               <div class="rssi-title">PETA POSISI PEKERJA — RSSI</div>
-              <div class="rssi-sub">Lokalisasi berbasis kekuatan sinyal (RSSI) · Estimasi akurasi ±2 m</div>
+              <div class="rssi-sub">Lokalisasi KNN berbasis kekuatan sinyal (RSSI) · Grid X 0–26, Y 0–15</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
               <div class="rssi-live-badge">● LIVE</div>
@@ -279,8 +279,8 @@
           </div>
 
           <div class="rssi-axis-row">
-            <span>0 m</span><span>10 m</span><span>20 m</span>
-            <span>30 m</span><span>40 m</span><span>50 m</span>
+            <span>X 0</span><span>X 5</span><span>X 10</span>
+            <span>X 16</span><span>X 21</span><span>X 26</span>
           </div>
 
           <div class="rssi-legend-row">
@@ -314,11 +314,11 @@
             <div class="rssi-pos-grid">
               <div class="rssi-pos-box">
                 <div class="rssi-pos-val" id="rdX">—</div>
-                <div class="rssi-pos-lbl">X (meter)</div>
+                <div class="rssi-pos-lbl">X (grid)</div>
               </div>
               <div class="rssi-pos-box">
                 <div class="rssi-pos-val" id="rdY">—</div>
-                <div class="rssi-pos-lbl">Y (meter)</div>
+                <div class="rssi-pos-lbl">Y (grid)</div>
               </div>
             </div>
             <div class="rssi-accuracy-row">
@@ -400,7 +400,7 @@
   // ==============================================
   // RSSI LOCALIZATION VISUALIZATION
   // ==============================================
-  const COLS = 25, ROWS = 13;
+  const COLS = 26, ROWS = 15;
 
   const ANCHORS = [
     { id:'AP1', gx:0,    gy:0,    r:79,  g:142, b:245, cls:'ap1' },
@@ -444,7 +444,7 @@
       ctx.fillRect(0, 0, CW, CH);
     });
 
-    // Grid lines (each cell = 50cm)
+    // One grid cell represents one coordinate unit.
     const cw = CW / COLS, ch = CH / ROWS;
     ctx.strokeStyle = 'rgba(140,160,195,0.55)';
     ctx.lineWidth = 0.7;
@@ -460,11 +460,10 @@
     ctx.font = '600 6px system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    for (let c = 0; c < COLS; c++) {
-      for (let r = 0; r < ROWS; r++) {
-        // Show labels sparsely to avoid clutter in 25x13 grid
+    for (let c = 0; c <= COLS; c++) {
+      for (let r = 0; r <= ROWS; r++) {
         if (c % 2 === 0 && r % 2 === 0) {
-          ctx.fillText(`${c*50}cm,${r*50}cm`, c*cw+2, r*ch+2);
+          ctx.fillText(String(c) + "," + String(r), c*cw+2, r*ch+2);
         }
       }
     }
@@ -491,8 +490,10 @@
       el.dataset.name = w.init;
       el.textContent = w.init;
       el.style.background = w.color;
-      el.style.left = `${(w.gx / COLS) * 100}%`;
-      el.style.top  = `${(w.gy / ROWS) * 100}%`;
+      const x = Math.max(0, Math.min(COLS, Number(w.position_x ?? w.gx ?? 0)));
+      const y = Math.max(0, Math.min(ROWS, Number(w.position_y ?? w.gy ?? 0)));
+      el.style.left = ((x / COLS) * 100)  + "%";
+      el.style.top  = ((y / ROWS) * 100)  + "%";
       el.addEventListener('click', () => selectWorker(w));
       markersEl.appendChild(el);
     });
@@ -530,8 +531,8 @@
     av.style.background = w.color;
     document.getElementById('rdName').textContent = w.name;
     document.getElementById('rdZone').textContent = w.zone;
-    document.getElementById('rdX').textContent = `${(w.gx * 5).toFixed(1)} m`;
-    document.getElementById('rdY').textContent = `${(w.gy * 5).toFixed(1)} m`;
+    document.getElementById("rdX").textContent = Number(w.position_x ?? w.gx ?? 0).toFixed(1);
+    document.getElementById("rdY").textContent = Number(w.position_y ?? w.gy ?? 0).toFixed(1);
 
     const barsEl = document.getElementById('rssiBars');
     barsEl.innerHTML = '';
@@ -566,6 +567,27 @@
     clearTimeout(window._rssiTimer);
     window._rssiTimer = setTimeout(() => { drawCanvas(); drawMarkers(); }, 80);
   });
+
+  async function refreshRealtimeLocations() {
+    try {
+      const response = await fetch("/api/workers/realtime", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      data.workers.forEach(realtime => {
+        const worker = WORKERS.find(w => w.name === realtime.name || String(w.worker_code || w.uid) === String(realtime.worker_code));
+        if (!worker || realtime.position_x == null || realtime.position_y == null) return;
+        worker.position_x = realtime.position_x;
+        worker.position_y = realtime.position_y;
+        worker.estimated_error = realtime.estimated_error;
+      });
+      drawMarkers();
+    } catch (_) {
+      // Keep the last known map state if MQTT or PostgreSQL is temporarily unavailable.
+    }
+  }
+
+  setInterval(refreshRealtimeLocations, 5000);
+  refreshRealtimeLocations();
 
   document.getElementById('logViolBtn').addEventListener('click', () => {
     window.location.href = '/laporan';

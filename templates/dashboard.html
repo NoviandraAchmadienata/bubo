@@ -13,7 +13,9 @@
 
     /* ── CCTV single-cam section ── */
     .db-cctv-section {
-      width: min(100%, 1240px);
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
       background: #fff;
       border-radius: 14px;
       box-shadow: var(--shadow);
@@ -24,6 +26,8 @@
     .db-cctv-section.cctv-card-expanded { max-width: none; width: 100%; }
 
     .cam-single {
+      width: 100%;
+      box-sizing: border-box;
       position: relative;
       background: #111;
       border-radius: 8px;
